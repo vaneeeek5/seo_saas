@@ -1,0 +1,22 @@
+{
+  "name": "seo-saas-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SEO Content Factory - Modular Monolith Monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "dev:api": "npm run start:dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "lint": "npm run lint --workspaces",
+    "audit:arch": "ts-node scripts/audit-arch.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
