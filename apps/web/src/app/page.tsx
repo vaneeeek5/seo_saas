@@ -30,11 +30,11 @@ export default function DashboardPage() {
         body: JSON.stringify({ name: projectName, domain, organizationId: 'org_demo_1' })
       });
       const data = await res.json();
-      addLog(`[Command Sent] CreateProject -> ID: ${data.projectId}`);
+      addLog(`[Команда отправлена] CreateProject -> ID Проекта: ${data.projectId}`);
       setProjectName('');
       setDomain('');
     } catch (err: any) {
-      addLog(`[Error] ${err.message}`);
+      addLog(`[Ошибка] ${err.message}`);
     }
   };
 
@@ -43,12 +43,12 @@ export default function DashboardPage() {
       const res = await fetch('http://localhost:4000/semantics/collect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: 'proj_demo_1', seedKeywords: ['seo saas', 'ai content factory'] })
+        body: JSON.stringify({ projectId: 'proj_demo_1', seedKeywords: ['seo продвижение saas', 'генерация контента ai'] })
       });
       const data = await res.json();
-      addLog(`[Command Sent] CollectSemantics -> TaskId: ${data.taskId}`);
+      addLog(`[Команда отправлена] CollectSemantics -> Задача: ${data.taskId}`);
     } catch (err: any) {
-      addLog(`[Error] ${err.message}`);
+      addLog(`[Ошибка] ${err.message}`);
     }
   };
 
@@ -57,12 +57,12 @@ export default function DashboardPage() {
       const res = await fetch('http://localhost:4000/content/articles/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: 'proj_demo_1', topic: 'Top 10 SEO SaaS Tools in 2026', primaryKeyword: 'seo saas' })
+        body: JSON.stringify({ projectId: 'proj_demo_1', topic: 'Топ 10 Инструментов SEO Автоматизации в 2026 году', primaryKeyword: 'seo автоматизация' })
       });
       const data = await res.json();
-      addLog(`[Command Sent] GenerateArticle -> TaskId: ${data.taskId}`);
+      addLog(`[Команда отправлена] GenerateArticle -> Задача: ${data.taskId}`);
     } catch (err: any) {
-      addLog(`[Error] ${err.message}`);
+      addLog(`[Ошибка] ${err.message}`);
     }
   };
 
@@ -75,11 +75,11 @@ export default function DashboardPage() {
         body: JSON.stringify({ projectId: 'proj_demo_1', title: knowledgeTitle, content: knowledgeContent })
       });
       const data = await res.json();
-      addLog(`[Command Sent] IngestKnowledge -> NodeID: ${data.nodeId}`);
+      addLog(`[Команда отправлена] IngestKnowledge -> Узел знаний: ${data.nodeId}`);
       setKnowledgeTitle('');
       setKnowledgeContent('');
     } catch (err: any) {
-      addLog(`[Error] ${err.message}`);
+      addLog(`[Ошибка] ${err.message}`);
     }
   };
 
@@ -92,9 +92,9 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       setDecisionResult(data);
-      addLog(`[Command Sent] EvaluateDecision -> Recommendation: ${data.recommendedAction}`);
+      addLog(`[Команда отправлена] EvaluateDecision -> Рекомендация: ${data.recommendedAction}`);
     } catch (err: any) {
-      addLog(`[Error] ${err.message}`);
+      addLog(`[Ошибка] ${err.message}`);
     }
   };
 
@@ -106,15 +106,15 @@ export default function DashboardPage() {
         body: JSON.stringify({ projectId: 'proj_demo_1', contentAssetId: 'art_demo_101' })
       });
       const data = await res.json();
-      addLog(`[Command Sent] PublishContent -> URL: ${data.externalUrl}`);
+      addLog(`[Команда отправлена] PublishContent -> Опубликовано: ${data.externalUrl}`);
     } catch (err: any) {
-      addLog(`[Error] ${err.message}`);
+      addLog(`[Ошибка] ${err.message}`);
     }
   };
 
   return (
     <div style={{ padding: '32px', maxWidth: '1280px', margin: '0 auto' }}>
-      {/* Header */}
+      {/* Шапка */}
       <header style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -128,7 +128,7 @@ export default function DashboardPage() {
             SEO Content Factory OS
           </h1>
           <p style={{ margin: '4px 0 0', color: '#9ca3af', fontSize: '14px' }}>
-            Multi-Agent Autonomous SaaS Platform (DDD + CQRS + Event-Driven)
+            Мультиагентная автономная платформа управления SEO-контентом
           </p>
         </div>
         <div style={{
@@ -147,33 +147,40 @@ export default function DashboardPage() {
             backgroundColor: connected ? '#10b981' : '#ef4444'
           }} />
           <span style={{ fontSize: '13px', color: '#d1d5db' }}>
-            SSE Realtime: {connected ? 'Connected' : 'Disconnected'}
+            SSE Стрим: {connected ? 'Подключено (Live)' : 'Отключено'}
           </span>
         </div>
       </header>
 
-      {/* Analytics Metric Highlights */}
+      {/* Аналитические виджеты */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '28px' }}>
         {[
-          { label: 'Organic Monthly Traffic', val: '12,500', sub: '+14% this month', color: '#38bdf8' },
-          { label: 'Keywords Ranked', val: '142', sub: '18 in Top 3', color: '#10b981' },
-          { label: 'Articles Generated', val: '24', sub: '98% SEO Score', color: '#a855f7' },
-          { label: 'Platform Health', val: '94/100', sub: 'Zero Queue Lag', color: '#f59e0b' },
+          { label: 'Органический трафик', val: '12,500', sub: '+14% за последний месяц', color: '#38bdf8' },
+          { label: 'Ключевых слов в ТОП-3', val: '18 из 142', sub: 'Рост видимости +22%', color: '#10b981' },
+          { label: 'Сгенерировано статей', val: '24 статьи', sub: '98% Качество SEO', color: '#a855f7' },
+          { label: 'Здоровье системы', val: '94 / 100', sub: 'Очередь без задержек', color: '#f59e0b' },
         ].map((m, i) => (
           <div key={i} style={{ background: '#111827', padding: '18px', borderRadius: '10px', border: '1px solid #1f2937' }}>
             <div style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase' }}>{m.label}</div>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: m.color, margin: '6px 0 2px' }}>{m.val}</div>
+            <div style={{ fontSize: '22px', fontWeight: 700, color: m.color, margin: '6px 0 2px' }}>{m.val}</div>
             <div style={{ fontSize: '12px', color: '#6b7280' }}>{m.sub}</div>
           </div>
         ))}
       </div>
 
-      {/* Navigation Tabs */}
+      {/* Навигация по вкладкам */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-        {(['overview', 'semantics', 'content', 'knowledge', 'decision', 'analytics'] as const).map((tab) => (
+        {[
+          { id: 'overview', name: 'Главная панель' },
+          { id: 'semantics', name: 'Семантика' },
+          { id: 'content', name: 'Генерация статей' },
+          { id: 'knowledge', name: 'База знаний RAG' },
+          { id: 'decision', name: 'AI-Решения' },
+          { id: 'analytics', name: 'Аналитика' },
+        ].map((tab) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
             style={{
               padding: '10px 18px',
               borderRadius: '8px',
@@ -181,29 +188,28 @@ export default function DashboardPage() {
               cursor: 'pointer',
               fontWeight: 600,
               fontSize: '13px',
-              textTransform: 'capitalize',
-              backgroundColor: activeTab === tab ? '#0284c7' : '#1f2937',
-              color: activeTab === tab ? '#ffffff' : '#9ca3af'
+              backgroundColor: activeTab === tab.id ? '#0284c7' : '#1f2937',
+              color: activeTab === tab.id ? '#ffffff' : '#9ca3af'
             }}
           >
-            {tab}
+            {tab.name}
           </button>
         ))}
       </div>
 
-      {/* Main Grid Interface */}
+      {/* Основная сетка */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        {/* Left Column: Command & Engine Triggers */}
+        {/* Левая колонка: Управление и команды */}
         <div style={{ background: '#111827', borderRadius: '12px', padding: '24px', border: '1px solid #1f2937' }}>
-          <h2 style={{ fontSize: '18px', marginTop: 0, color: '#f3f4f6' }}>Command Bus Controls</h2>
+          <h2 style={{ fontSize: '18px', marginTop: 0, color: '#f3f4f6' }}>Панель отправки команд (Command Bus)</h2>
           
-          {/* Create Project Form */}
+          {/* Форма создания проекта */}
           <form onSubmit={handleCreateProject} style={{ marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '14px', color: '#38bdf8', marginBottom: '10px' }}>Project Engine</h3>
+            <h3 style={{ fontSize: '14px', color: '#38bdf8', marginBottom: '10px' }}>Управление Проектами</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
               <input
                 type="text"
-                placeholder="Project Name"
+                placeholder="Название проекта"
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 style={{ padding: '10px', borderRadius: '6px', border: '1px solid #374151', background: '#1f2937', color: '#fff' }}
@@ -211,7 +217,7 @@ export default function DashboardPage() {
               />
               <input
                 type="text"
-                placeholder="Domain (e.g. site.com)"
+                placeholder="Домен (напр. mysite.ru)"
                 value={domain}
                 onChange={(e) => setDomain(e.target.value)}
                 style={{ padding: '10px', borderRadius: '6px', border: '1px solid #374151', background: '#1f2937', color: '#fff' }}
@@ -219,25 +225,25 @@ export default function DashboardPage() {
               />
             </div>
             <button type="submit" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: 'none', background: '#2563eb', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
-              Send CreateProjectCommand
+              Создать проект (CreateProjectCommand)
             </button>
           </form>
 
           <hr style={{ borderColor: '#1f2937', margin: '18px 0' }} />
 
-          {/* RAG Knowledge Ingestion Form */}
+          {/* Форма RAG Базы Знаний */}
           <form onSubmit={handleIngestKnowledge} style={{ marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '14px', color: '#a855f7', marginBottom: '10px' }}>RAG Knowledge Engine</h3>
+            <h3 style={{ fontSize: '14px', color: '#a855f7', marginBottom: '10px' }}>Индексация в Базу Знаний (RAG Engine)</h3>
             <input
               type="text"
-              placeholder="Knowledge Node Title"
+              placeholder="Заголовок документа / знаний"
               value={knowledgeTitle}
               onChange={(e) => setKnowledgeTitle(e.target.value)}
               style={{ width: '100%', padding: '10px', marginBottom: '8px', borderRadius: '6px', border: '1px solid #374151', background: '#1f2937', color: '#fff', boxSizing: 'border-box' }}
               required
             />
             <textarea
-              placeholder="Knowledge Context Body"
+              placeholder="Текст или правила бренда для AI..."
               value={knowledgeContent}
               onChange={(e) => setKnowledgeContent(e.target.value)}
               rows={2}
@@ -245,44 +251,44 @@ export default function DashboardPage() {
               required
             />
             <button type="submit" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: 'none', background: '#9333ea', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
-              Send IngestKnowledgeCommand
+              Добавить в базу знаний (IngestKnowledgeCommand)
             </button>
           </form>
 
           <hr style={{ borderColor: '#1f2937', margin: '18px 0' }} />
 
-          {/* Quick Engine Triggers */}
+          {/* Движки и триггеры */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <button onClick={handleCollectSemantics} style={{ padding: '12px', borderRadius: '6px', border: 'none', background: '#0d9488', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
-              Trigger CollectSemantic
+              Сбор семантики
             </button>
             <button onClick={handleGenerateArticle} style={{ padding: '12px', borderRadius: '6px', border: 'none', background: '#4f46e5', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
-              Trigger GenerateArticle
+              Сгенерировать статью
             </button>
             <button onClick={handleEvaluateDecision} style={{ padding: '12px', borderRadius: '6px', border: 'none', background: '#ea580c', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
-              Evaluate Decision Engine
+              Выработать AI-решение
             </button>
             <button onClick={handlePublishContent} style={{ padding: '12px', borderRadius: '6px', border: 'none', background: '#059669', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
-              Publish to CMS
+              Опубликовать в CMS
             </button>
           </div>
         </div>
 
-        {/* Right Column: Task Stream & Decision Result */}
+        {/* Правая колонка: Реалтайм поток задач и лог */}
         <div style={{ background: '#111827', borderRadius: '12px', padding: '24px', border: '1px solid #1f2937' }}>
-          {/* AI Decision Result Box */}
+          {/* Карточка AI Решения */}
           {decisionResult && (
             <div style={{ background: '#7c2d12', padding: '14px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #ea580c' }}>
-              <div style={{ fontWeight: 700, color: '#ffedd5', fontSize: '14px' }}>AI Decision Recommendation</div>
-              <div style={{ fontSize: '13px', color: '#fed7aa', marginTop: '4px' }}>Action: {decisionResult.recommendedAction}</div>
-              <div style={{ fontSize: '12px', color: '#fdba74', marginTop: '2px' }}>Reason: {decisionResult.reason}</div>
+              <div style={{ fontWeight: 700, color: '#ffedd5', fontSize: '14px' }}>Рекомендация AI-Движка Decisions</div>
+              <div style={{ fontSize: '13px', color: '#fed7aa', marginTop: '4px' }}>Рекомендуемое действие: {decisionResult.recommendedAction}</div>
+              <div style={{ fontSize: '12px', color: '#fdba74', marginTop: '2px' }}>Причина: {decisionResult.reason}</div>
             </div>
           )}
 
-          <h2 style={{ fontSize: '18px', marginTop: 0, color: '#f3f4f6' }}>BullMQ Task Engine SSE Stream</h2>
+          <h2 style={{ fontSize: '18px', marginTop: 0, color: '#f3f4f6' }}>Реалтайм Поток Задач BullMQ (SSE Stream)</h2>
           
           {Object.keys(tasks).length === 0 ? (
-            <p style={{ color: '#6b7280', fontSize: '14px' }}>No active tasks streamed yet. Trigger a command to observe live progress.</p>
+            <p style={{ color: '#6b7280', fontSize: '14px' }}>Задачи пока не выполняются. Нажмите любую кнопку слева для запуска процесса.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '220px', overflowY: 'auto' }}>
               {Object.values(tasks).map((task) => (
@@ -299,10 +305,10 @@ export default function DashboardPage() {
 
           <hr style={{ borderColor: '#1f2937', margin: '20px 0' }} />
 
-          <h3 style={{ fontSize: '14px', color: '#9ca3af' }}>Live Command Bus Audit Log</h3>
+          <h3 style={{ fontSize: '14px', color: '#9ca3af' }}>Лог вызовов шины Command Bus</h3>
           <div style={{ background: '#030712', padding: '12px', borderRadius: '6px', maxHeight: '150px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '12px', color: '#a7f3d0' }}>
             {log.length === 0 ? (
-              <span style={{ color: '#4b5563' }}>Audit log empty...</span>
+              <span style={{ color: '#4b5563' }}>Лог команд пуст...</span>
             ) : (
               log.map((entry, idx) => <div key={idx} style={{ marginBottom: '4px' }}>{entry}</div>)
             )}

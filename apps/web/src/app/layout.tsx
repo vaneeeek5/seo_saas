@@ -1,8 +1,8 @@
 import React from 'react';
 
 export const metadata = {
-  title: 'SEO Content Factory OS',
-  description: 'AI-Powered Full Cycle SEO Automation Platform',
+  title: 'SEO Content Factory OS — Платформа Авто-Продвижения',
+  description: 'AI-Платформа полного цикла для автоматизированного создания, публикации и развития SEO-контента',
 };
 
 export default function RootLayout({
@@ -11,7 +11,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="ru">
       <body style={{
         margin: 0,
         padding: 0,
