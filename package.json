@@ -12,7 +12,8 @@
     "dev:api": "npm run start:dev --workspace=apps/api",
     "dev:web": "npm run dev --workspace=apps/web",
     "lint": "npm run lint --workspaces",
-    "audit:arch": "ts-node scripts/audit-arch.ts"
+    "audit:arch": "ts-node scripts/audit-arch.ts",
+    "test:e2e": "ts-node scripts/e2e-orchestration.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

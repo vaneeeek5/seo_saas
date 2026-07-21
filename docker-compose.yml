@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: seo_saas_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: seo_saas
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: seo_saas_redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    restart: always
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: seo_saas_api
+    environment:
+      DATABASE_URL: 'postgresql://postgres:postgrespassword@postgres:5432/seo_saas?schema=public'
+      REDIS_HOST: 'redis'
+      REDIS_PORT: '6379'
+      PORT: '4000'
+    ports:
+      - '4000:4000'
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: seo_saas_web
+    ports:
+      - '3000:3000'
+    depends_on:
+      - api
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
