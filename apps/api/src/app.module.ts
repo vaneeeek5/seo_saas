@@ -9,6 +9,8 @@ import { SemanticModule } from './modules/semantic/semantic.module';
 import { ContentModule } from './modules/content/content.module';
 import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { DecisionModule } from './modules/decision/decision.module';
+import { PublisherModule } from './modules/publisher/publisher.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { DecisionModule } from './modules/decision/decision.module';
     ContentModule,
     KnowledgeModule,
     DecisionModule,
+    PublisherModule,
+    AnalyticsModule,
   ],
 })
 export class AppModule {}
