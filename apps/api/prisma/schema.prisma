@@ -1,0 +1,161 @@
+// SEO Content Factory - Prisma Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  PENDING
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ContentStatus {
+  DRAFT
+  GENERATING
+  REVIEW_NEEDED
+  SCHEDULED
+  PUBLISHED
+}
+
+model Organization {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  projects  Project[]
+  users     User[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String       @id @default(uuid())
+  email          String       @unique
+  name           String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("users")
+}
+
+model Project {
+  id             String        @id @default(uuid())
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  domain         String
+  targetRegion   String?       @default("global")
+  language       String?       @default("en")
+  status         ProjectStatus @default(ACTIVE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  websites      Website[]
+  tasks         Task[]
+  keywords      Keyword[]
+  clusters      Cluster[]
+  contentAssets ContentAsset[]
+  publications  Publication[]
+
+  @@map("projects")
+}
+
+model Website {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url       String
+  cmsType   String?  @default("wordpress")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("websites")
+}
+
+model Task {
+  id        String     @id @default(uuid())
+  projectId String
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type      String
+  status    TaskStatus @default(QUEUED)
+  progress  Int        @default(0)
+  message   String?
+  error     String?
+  payload   Json?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("tasks")
+}
+
+model Keyword {
+  id         String   @id @default(uuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  term       String
+  searchVol  Int?     @default(0)
+  difficulty Int?     @default(0)
+  clusterId  String?
+  cluster    Cluster? @relation(fields: [clusterId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+
+  @@map("keywords")
+}
+
+model Cluster {
+  id        String    @id @default(uuid())
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  keywords  Keyword[]
+  createdAt DateTime  @default(now())
+
+  @@map("clusters")
+}
+
+model ContentAsset {
+  id          String        @id @default(uuid())
+  projectId   String
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  slug        String
+  body        String?       @db.Text
+  status      ContentStatus @default(DRAFT)
+  wordCount   Int?          @default(0)
+  metaTitle   String?
+  metaDesc    String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  publication Publication?
+
+  @@map("content_assets")
+}
+
+model Publication {
+  id             String       @id @default(uuid())
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contentAssetId String       @unique
+  contentAsset   ContentAsset @relation(fields: [contentAssetId], references: [id], onDelete: Cascade)
+  externalUrl    String?
+  publishedAt    DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@map("publications")
+}
