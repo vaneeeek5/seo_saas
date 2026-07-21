@@ -3,6 +3,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PrismaModule } from './infrastructure/database/prisma.module';
 import { QueueModule } from './infrastructure/queue/queue.module';
 import { AiProviderModule } from './infrastructure/ai/ai-provider.module';
+import { OrganizationModule } from './modules/organization/organization.module';
 import { ProjectModule } from './modules/project/project.module';
 import { TaskModule } from './modules/task/task.module';
 import { SemanticModule } from './modules/semantic/semantic.module';
@@ -22,6 +23,7 @@ import { HealthModule } from './modules/health/health.module';
     PrismaModule,
     QueueModule,
     AiProviderModule,
+    OrganizationModule,
     ProjectModule,
     TaskModule,
     SemanticModule,
