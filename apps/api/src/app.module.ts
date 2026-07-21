@@ -11,6 +11,7 @@ import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { DecisionModule } from './modules/decision/decision.module';
 import { PublisherModule } from './modules/publisher/publisher.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     DecisionModule,
     PublisherModule,
     AnalyticsModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

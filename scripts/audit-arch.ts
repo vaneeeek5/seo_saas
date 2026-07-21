@@ -19,9 +19,9 @@ function auditControllers(dir: string) {
 
     console.log(`\n🔍 Auditing Controller: ${relPath}`);
 
-    // Check 1: Controller must import CommandBus or return Stream
-    if (!content.includes('CommandBus') && !content.includes('Sse') && !content.includes('Stream')) {
-      console.error(`  ❌ [Rule Violation] Controller does not use CommandBus or Stream for CQRS isolation.`);
+    // Check 1: Controller must import CommandBus, QueryBus or return Stream
+    if (!content.includes('CommandBus') && !content.includes('QueryBus') && !content.includes('Sse') && !content.includes('Stream')) {
+      console.error(`  ❌ [Rule Violation] Controller does not use CommandBus, QueryBus or Stream for CQRS isolation.`);
       totalViolations++;
     } else {
       console.log(`  ✅ [Rule Check] CQRS CommandBus or SSE Stream present.`);
