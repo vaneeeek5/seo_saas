@@ -3,28 +3,51 @@ import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DomainEventTypes, TaskStatusChangedEvent, TaskStatus, TaskType } from '@seo-saas/shared';
+import { AiProviderService } from '../../../infrastructure/ai/ai-provider.service';
 
 @Processor('content-queue')
 export class ContentProcessor extends WorkerHost {
   private readonly logger = new Logger(ContentProcessor.name);
 
-  constructor(private readonly eventEmitter: EventEmitter2) {
+  constructor(
+    private readonly eventEmitter: EventEmitter2,
+    private readonly aiProvider: AiProviderService,
+  ) {
     super();
   }
 
   async process(job: Job<any, any, string>): Promise<any> {
-    const { taskId, projectId, topic, primaryKeyword } = job.data;
-    this.logger.log(`[ContentWorker] Processing job ${job.id} for article topic "${topic}"...`);
+    const { taskId, projectId, topic, primaryKeyword, secondaryKeywords } = job.data;
+    this.logger.log(`[ContentWorker] Starting multi-stage AI generation for task ${taskId}...`);
 
-    this.emitTaskStatus(taskId, projectId, TaskStatus.PROCESSING, 20, `Generating outline for "${topic}"...`);
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // Stage 1: Generate Outline
+    this.emitTaskStatus(taskId, projectId, TaskStatus.PROCESSING, 20, `Generating structured outline for "${topic}"...`);
+    const outline = await this.aiProvider.generateOutline(topic, primaryKeyword);
 
-    this.emitTaskStatus(taskId, projectId, TaskStatus.PROCESSING, 60, `Writing section drafts & optimizing for "${primaryKeyword}"...`);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Stage 2: Full Article & SEO Meta Generation
+    this.emitTaskStatus(taskId, projectId, TaskStatus.PROCESSING, 60, `Writing article sections & optimizing meta tags...`);
+    const articleResult = await this.aiProvider.generateArticleContent(
+      topic,
+      primaryKeyword,
+      secondaryKeywords,
+      `Project ID context: ${projectId}`
+    );
 
-    this.emitTaskStatus(taskId, projectId, TaskStatus.COMPLETED, 100, `Article generated successfully for topic "${topic}".`);
+    // Stage 3: Completion
+    this.emitTaskStatus(
+      taskId,
+      projectId,
+      TaskStatus.COMPLETED,
+      100,
+      `Article generated! Word count: ${articleResult.wordCount}. Meta Title: "${articleResult.metaTitle}"`
+    );
 
-    return { articleId: `art_${Date.now()}`, wordCount: 1850 };
+    return {
+      articleId: `art_${Date.now()}`,
+      title: articleResult.title,
+      wordCount: articleResult.wordCount,
+      outline: articleResult.outline,
+    };
   }
 
   private emitTaskStatus(taskId: string, projectId: string, status: TaskStatus, progress: number, message: string) {
