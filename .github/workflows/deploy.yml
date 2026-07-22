@@ -1,0 +1,68 @@
+name: Auto Deploy to Server on Push
+
+on:
+  push:
+    branches:
+      - main
+      - production
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Verify Types & Build Monorepo
+        run: |
+          npm run build --workspaces
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST || '80.78.241.208' }}
+          username: ${{ secrets.SERVER_USER || 'root' }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          script: |
+            echo "🚀 [CI/CD] Starting automated deployment..."
+            
+            TARGET_DIR="/var/www/seo_saas"
+            mkdir -p $TARGET_DIR
+            cd $TARGET_DIR
+            
+            # Ensure Docker & Docker Compose are installed
+            if ! command -v docker &> /dev/null; then
+              echo "🐳 Installing Docker Engine..."
+              curl -fsSL https://get.docker.com | sh
+            fi
+            
+            # Sync repository
+            if [ -d ".git" ]; then
+              echo "📥 Pulling latest commits from GitHub main..."
+              git fetch --all
+              git reset --hard origin/main
+            else
+              echo "📥 Cloning repository from GitHub..."
+              git clone https://github.com/vaneeeek5/seo_saas.git .
+            fi
+            
+            chmod +x scripts/setup-server.sh || true
+            ./scripts/setup-server.sh || true
+            
+            echo "🐳 Launching Docker Compose stack..."
+            docker compose down || true
+            docker compose up -d --build
+            
+            echo "🎉 [CI/CD] Automated Deployment Completed Successfully!"
+            docker compose ps
