@@ -67,5 +67,10 @@ jobs:
             docker compose down || true
             docker compose up -d --build
             
-            echo "🎉 [CI/CD] Automated Deployment Completed Successfully!"
+            echo "🔍 Waiting 15s for containers to stabilize..."
+            sleep 15
+            
+            echo "📊 Docker Container Status:"
             docker compose ps
+            
+            echo "🎉 [CI/CD] Automated Deployment Completed Successfully!"

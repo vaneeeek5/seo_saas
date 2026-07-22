@@ -23,17 +23,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY package*.json ./
-COPY packages/shared/package*.json ./packages/shared/
-COPY apps/api/package*.json ./apps/api/
-COPY apps/api/prisma ./apps/api/prisma/
-
-RUN npm ci --only=production
-
-COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/api ./apps/api
 
 EXPOSE 4000
 
