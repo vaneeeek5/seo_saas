@@ -9,6 +9,11 @@ export default function DashboardPage() {
   const [log, setLog] = useState<string[]>([]);
   const [autoPilotRunning, setAutoPilotRunning] = useState<boolean>(false);
 
+  // Phase 3 Autopilot & Limit Sliders State
+  const [autopilotEnabled, setAutopilotEnabled] = useState<boolean>(true);
+  const [articlesPerDay, setArticlesPerDay] = useState<number>(2);
+  const [articlesPerWeek, setArticlesPerWeek] = useState<number>(10);
+
   // Project State
   const [projectName, setProjectName] = useState('');
   const [domain, setDomain] = useState('');
@@ -65,7 +70,7 @@ export default function DashboardPage() {
   // ⚡ AUTOMATED AUTO-PILOT PIPELINE
   const runFullAutoPilot = async () => {
     setAutoPilotRunning(true);
-    addLog(`🚀 [Автопилот] Запущен 100% автопилот продвижения...`);
+    addLog(`🚀 [Автопилот] Запущен 100% автопилот продвижения (Лимит: ${articlesPerDay} статей/день, ${articlesPerWeek} статей/неделю)...`);
 
     try {
       addLog(`🤖 [AI-Агент] Шаг 1: Анализ ниши сайта и поиск перспективных тем...`);
@@ -111,7 +116,7 @@ export default function DashboardPage() {
       setGeneratedArticles(prev => [newArt, ...prev]);
       setSelectedArticle(newArt);
 
-      addLog(`🚀 [AI-Агент] Шаг 4: Публикация на сайт в CMS...`);
+      addLog(`🚀 [AI-Агент] Шаг 4: Публикация на сайт в CMS / Webhook...`);
       const pubRes = await fetch('http://localhost:4000/publishers/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -393,8 +398,10 @@ export default function DashboardPage() {
               <h2 style={{ fontSize: '20px', margin: 0, color: '#38bdf8' }}>🔌 Раздел Подключений и Зашифрованных API Ключей</h2>
               <p style={{ color: '#9ca3af', fontSize: '14px', margin: '4px 0 0' }}>Управление ключами AI-провайдеров и CMS с военным уровнем шифрования AES-256-GCM.</p>
             </div>
-            <div style={{ background: '#065f46', color: '#a7f3d0', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '1px solid #059669' }}>
-              🔒 Безопасность: AES-256-GCM
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <a href="/dashboard/integrations" style={{ background: '#0284c7', color: '#fff', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
+                Открыть Полный Каталог Plug & Play →
+              </a>
             </div>
           </div>
 
@@ -471,17 +478,59 @@ export default function DashboardPage() {
       {/* ============================================================ */}
       {activeTab === 'overview' && (
         <div>
-          {/* Блок Автопилота Инфо */}
-          <div style={{ background: 'linear-gradient(135deg, #064e3b 0%, #111827 100%)', padding: '20px 24px', borderRadius: '12px', marginBottom: '24px', border: '1px solid #10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h3 style={{ margin: 0, color: '#a7f3d0', fontSize: '18px' }}>🤖 Автономный режим AI (AI First)</h3>
-              <p style={{ margin: '4px 0 0', color: '#d1d5db', fontSize: '14px' }}>
-                Вам не нужно самостоятельно придумывать статьи. AI-агенты сами ищут ключи, составляют темы, пишут тексты и публикуют их.
-              </p>
+          {/* Блок Настроек Автопилота и Лимитов */}
+          <div style={{ background: 'linear-gradient(135deg, #064e3b 0%, #111827 100%)', padding: '24px', borderRadius: '12px', marginBottom: '24px', border: '1px solid #10b981' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <h3 style={{ margin: 0, color: '#a7f3d0', fontSize: '18px' }}>🤖 Автономный Планировщик Автопилота (Autopilot Scheduler)</h3>
+                <p style={{ margin: '4px 0 0', color: '#d1d5db', fontSize: '14px' }}>
+                  Настройка суточных лимитов и режима работы автономных AI-агентов.
+                </p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: autopilotEnabled ? '#10b981' : '#9ca3af', fontWeight: 700, fontSize: '14px' }}>
+                  {autopilotEnabled ? 'ВКЛЮЧЕН (АКТИВЕН)' : 'ВЫКЛЮЧЕН'}
+                </span>
+                <input
+                  type="checkbox"
+                  checked={autopilotEnabled}
+                  onChange={(e) => setAutopilotEnabled(e.target.checked)}
+                  style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                />
+              </div>
             </div>
-            <button onClick={runFullAutoPilot} disabled={autoPilotRunning} style={{ padding: '10px 20px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>
-              Запустить сейчас
-            </button>
+
+            {/* Sliders for limits */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', background: '#111827', padding: '16px', borderRadius: '10px', border: '1px solid #1f2937' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#38bdf8', marginBottom: '6px' }}>
+                  <span>Лимит статей в день:</span>
+                  <strong>{articlesPerDay} статей / день</strong>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={articlesPerDay}
+                  onChange={(e) => setArticlesPerDay(parseInt(e.target.value, 10))}
+                  style={{ width: '100%', cursor: 'pointer' }}
+                />
+              </div>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#a855f7', marginBottom: '6px' }}>
+                  <span>Лимит статей в неделю:</span>
+                  <strong>{articlesPerWeek} статей / неделю</strong>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="50"
+                  value={articlesPerWeek}
+                  onChange={(e) => setArticlesPerWeek(parseInt(e.target.value, 10))}
+                  style={{ width: '100%', cursor: 'pointer' }}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Метрики */}

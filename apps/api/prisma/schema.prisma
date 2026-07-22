@@ -40,6 +40,10 @@ enum UserRole {
 
 enum IntegrationProvider {
   OPENAI
+  WEBHOOK
+  GSC
+  METRIKA
+  TELEGRAM
   GEMINI
   ANTHROPIC
   WORDSTAT
@@ -74,27 +78,28 @@ model User {
 }
 
 model Project {
-  id              String                  @id @default(uuid())
-  organizationId  String
-  organization    Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  name            String
-  domain          String
-  targetRegion    String?                 @default("global")
-  language        String?                 @default("en")
-  status          ProjectStatus           @default(ACTIVE)
-  articlesPerDay  Int?                    @default(1)
-  articlesPerWeek Int?                    @default(7)
-  includeKeywords String[]
-  excludeKeywords String[]
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
-  websites        Website[]
-  tasks           Task[]
-  keywords        Keyword[]
-  clusters        Cluster[]
-  contentAssets   ContentAsset[]
-  publications    Publication[]
-  integrations    IntegrationConnection[]
+  id               String                  @id @default(uuid())
+  organizationId   String
+  organization     Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name             String
+  domain           String
+  targetRegion     String?                 @default("global")
+  language         String?                 @default("en")
+  status           ProjectStatus           @default(ACTIVE)
+  autopilotEnabled Boolean                 @default(true)
+  articlesPerDay   Int?                    @default(1)
+  articlesPerWeek  Int?                    @default(7)
+  includeKeywords  String[]
+  excludeKeywords  String[]
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  websites         Website[]
+  tasks            Task[]
+  keywords         Keyword[]
+  clusters         Cluster[]
+  contentAssets    ContentAsset[]
+  publications     Publication[]
+  integrations     IntegrationConnection[]
 
   @@map("projects")
 }
@@ -122,17 +127,18 @@ model IntegrationConnection {
 }
 
 model Website {
-  id              String   @id @default(uuid())
-  projectId       String
-  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  url             String
-  cmsType         String?  @default("wordpress")
-  articlesPerDay  Int?     @default(1)
-  articlesPerWeek Int?     @default(7)
-  includeKeywords String[]
-  excludeKeywords String[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id               String   @id @default(uuid())
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url              String
+  cmsType          String?  @default("wordpress")
+  autopilotEnabled Boolean  @default(true)
+  articlesPerDay   Int?     @default(1)
+  articlesPerWeek  Int?     @default(7)
+  includeKeywords  String[]
+  excludeKeywords  String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@map("websites")
 }

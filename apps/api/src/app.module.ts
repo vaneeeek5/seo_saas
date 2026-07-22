@@ -15,6 +15,7 @@ import { PublisherModule } from './modules/publisher/publisher.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { HealthModule } from './modules/health/health.module';
 import { IntegrationModule } from './modules/integration/integration.module';
+import { AutomationModule } from './modules/automation/automation.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { IntegrationModule } from './modules/integration/integration.module';
     AnalyticsModule,
     HealthModule,
     IntegrationModule,
+    AutomationModule,
   ],
 })
 export class AppModule {}

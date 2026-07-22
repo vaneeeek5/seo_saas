@@ -3,15 +3,19 @@
 import React, { useState, useEffect } from 'react';
 
 export default function IntegrationsDashboardPage() {
-  const [providerSelect, setProviderSelect] = useState<'OPENAI' | 'WORDPRESS_CMS' | 'WORDSTAT' | 'GEMINI' | 'ANTHROPIC'>('OPENAI');
+  const [providerSelect, setProviderSelect] = useState<'OPENAI' | 'WEBHOOK' | 'GSC' | 'METRIKA' | 'TELEGRAM' | 'WORDPRESS_CMS' | 'GEMINI' | 'ANTHROPIC'>('OPENAI');
   const [connectionName, setConnectionName] = useState('');
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [webhookUrlInput, setWebhookUrlInput] = useState('');
+  const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [log, setLog] = useState<string[]>([]);
+  
   const [connectionsList, setConnectionsList] = useState<Array<{ id: string; provider: string; name: string; maskedKey: string; encryption: string; status: string; isActive: boolean; date: string }>>([
     { id: 'conn_demo_openai', provider: 'OPENAI', name: 'OpenAI ChatGPT API Key', maskedKey: 'sk-p-****-****-a9F1', encryption: 'AES-256-GCM', status: 'CONNECTED', isActive: true, date: new Date().toLocaleDateString() },
-    { id: 'conn_demo_wp', provider: 'WORDPRESS_CMS', name: 'WordPress REST API Access', maskedKey: 'wp_a-****-****-00ff', encryption: 'AES-256-GCM', status: 'CONNECTED', isActive: true, date: new Date().toLocaleDateString() },
-    { id: 'conn_demo_metrika', provider: 'WORDSTAT', name: 'Yandex Metrika / Wordstat API', maskedKey: 'y0_a-****-****-77c1', encryption: 'AES-256-GCM', status: 'CONNECTED', isActive: true, date: new Date().toLocaleDateString() },
+    { id: 'conn_demo_webhook', provider: 'WEBHOOK', name: 'Внешний Вебхук Публикации (Custom CMS)', maskedKey: 'https://mysite.com/api/webhook-****', encryption: 'AES-256-GCM', status: 'CONNECTED', isActive: true, date: new Date().toLocaleDateString() },
+    { id: 'conn_demo_tg', provider: 'TELEGRAM', name: 'Telegram Bot Уведомления', maskedKey: 'bot77123-****-****-a19F', encryption: 'AES-256-GCM', status: 'CONNECTED', isActive: true, date: new Date().toLocaleDateString() },
+    { id: 'conn_demo_gsc', provider: 'GSC', name: 'Google Search Console API', maskedKey: 'gsc-app-****-****-88ff', encryption: 'AES-256-GCM', status: 'CONNECTED', isActive: true, date: new Date().toLocaleDateString() },
   ]);
 
   const addLog = (msg: string) => {
@@ -40,6 +44,8 @@ export default function IntegrationsDashboardPage() {
     e.preventDefault();
     setLoading(true);
 
+    const secretValue = providerSelect === 'WEBHOOK' ? webhookUrlInput : apiKeyInput;
+
     try {
       const res = await fetch('http://localhost:4000/integrations', {
         method: 'POST',
@@ -48,12 +54,12 @@ export default function IntegrationsDashboardPage() {
           projectId: 'proj_demo_1',
           provider: providerSelect,
           name: connectionName || `${providerSelect} Connection`,
-          apiKey: apiKeyInput,
+          apiKey: secretValue,
         })
       });
       const data = await res.json();
 
-      addLog(`🔒 [AES-256-GCM Encrypted] API Key for ${providerSelect} saved! Mask: ${data.maskedKey || 'sk-****'}`);
+      addLog(`🔒 [AES-256-GCM Encrypted] Интеграция ${providerSelect} сохранена! Маска: ${data.maskedKey || 'sk-****'}`);
 
       setConnectionsList(prev => [
         {
@@ -70,6 +76,8 @@ export default function IntegrationsDashboardPage() {
       ]);
       setConnectionName('');
       setApiKeyInput('');
+      setWebhookUrlInput('');
+      setShowModal(false);
     } catch (err: any) {
       addLog(`[Error] ${err.message}`);
     } finally {
@@ -79,10 +87,11 @@ export default function IntegrationsDashboardPage() {
 
   const serviceCards = [
     { provider: 'OPENAI', title: 'OpenAI API', desc: 'Генерация статей на GPT-4o и Embeddings', icon: '🤖', color: '#10a37f' },
-    { provider: 'WORDPRESS_CMS', title: 'WordPress CMS', desc: 'Авто-публикация готовых постов через REST API', icon: '📝', color: '#21759b' },
-    { provider: 'WORDSTAT', title: 'Яндекс Метрика & Wordstat', desc: 'Анализ показов, кликов и поиск поисковых запросов', icon: '📊', color: '#ffcc00' },
-    { provider: 'GEMINI', title: 'Google Gemini 1.5 Pro', desc: 'Мультимодальный анализ ниш и генератор контента', icon: '✨', color: '#4285f4' },
-    { provider: 'ANTHROPIC', title: 'Anthropic Claude 3.5', desc: 'Глубокая редакторская вычитка и SEO-копирайтинг', icon: '🧠', color: '#d97706' },
+    { provider: 'WEBHOOK', title: 'CMS & Custom Webhooks', desc: 'Авто-публикация постов по HTTP POST на сторонние серверы', icon: '🌐', color: '#0284c7' },
+    { provider: 'GSC', title: 'Google Search Console', desc: 'Отслеживание кликов, показов и индексации в Google', icon: '🔍', color: '#ea4335' },
+    { provider: 'METRIKA', title: 'Яндекс Метрика & Wordstat', desc: 'Анализ показов, поисковых фраз и трафика', icon: '📊', color: '#ffcc00' },
+    { provider: 'TELEGRAM', title: 'Telegram Bot', desc: 'Уведомления о публикациях и отчетах в Telegram канал', icon: '✈️', color: '#229ed9' },
+    { provider: 'WORDPRESS_CMS', title: 'WordPress CMS', desc: 'Интеграция с WordPress REST API', icon: '📝', color: '#21759b' },
   ];
 
   return (
@@ -91,31 +100,37 @@ export default function IntegrationsDashboardPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', borderBottom: '1px solid #1f2937', paddingBottom: '20px' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: '26px', fontWeight: 700, color: '#38bdf8' }}>
-            🔌 Центр подключений и API-ключей (Integrations Dashboard)
+            🔌 Центр Интеграций и Автопилота (Plug & Play)
           </h1>
           <p style={{ margin: '6px 0 0', color: '#9ca3af', fontSize: '14px' }}>
-            Подключайте внешние сервисы AI, CMS и Аналитики без хардкода. Все ключи шифруются симметричным алгоритмом AES-256-GCM.
+            Подключайте AI-провайдеры, Webhooks, Telegram и аналитику. Все ключи шифруются симметричным AES-256-GCM.
           </p>
         </div>
-        <a href="/" style={{ padding: '10px 18px', background: '#1f2937', color: '#38bdf8', borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '13px', border: '1px solid #374151' }}>
-          ← На Главный Дашборд
-        </a>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button onClick={() => setShowModal(true)} style={{ padding: '10px 20px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>
+            + Добавить Подключение
+          </button>
+          <a href="/" style={{ padding: '10px 18px', background: '#1f2937', color: '#38bdf8', borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '13px', border: '1px solid #374151' }}>
+            ← На Дашборд
+          </a>
+        </div>
       </div>
 
       {/* Grid of Service Cards */}
-      <h2 style={{ fontSize: '18px', color: '#f3f4f6', marginBottom: '14px' }}>Доступные внешние сервисы</h2>
+      <h2 style={{ fontSize: '18px', color: '#f3f4f6', marginBottom: '14px' }}>Каталог интеграций Plug & Play</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
         {serviceCards.map((sc) => (
           <div
             key={sc.provider}
-            onClick={() => setProviderSelect(sc.provider as any)}
+            onClick={() => { setProviderSelect(sc.provider as any); setShowModal(true); }}
             style={{
-              background: providerSelect === sc.provider ? '#1e293b' : '#111827',
-              border: `2px solid ${providerSelect === sc.provider ? sc.color : '#1f2937'}`,
+              background: '#111827',
+              border: `1px solid #1f2937`,
               borderRadius: '12px',
               padding: '20px',
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              position: 'relative'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -130,63 +145,82 @@ export default function IntegrationsDashboardPage() {
         ))}
       </div>
 
-      {/* Add Credential Form */}
-      <div style={{ background: '#111827', borderRadius: '12px', padding: '24px', border: '1px solid #1f2937', marginBottom: '32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '18px', margin: 0, color: '#f3f4f6' }}>Форма безопасного добавления ключей</h2>
-          <span style={{ background: '#064e3b', color: '#6ee7b7', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>
-            🔒 AES-256-GCM Encrypted
-          </span>
-        </div>
+      {/* Modal Window for Credential Entry */}
+      {showModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#111827', width: '540px', borderRadius: '16px', padding: '28px', border: '1px solid #374151', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '18px', margin: 0, color: '#38bdf8' }}>Безопасное подключение: {providerSelect}</h2>
+              <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', color: '#9ca3af', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+            </div>
 
-        <form onSubmit={handleSaveConnection}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>Выбранный сервис</label>
-              <select
-                value={providerSelect}
-                onChange={(e: any) => setProviderSelect(e.target.value)}
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#1f2937', color: '#fff' }}
-              >
-                <option value="OPENAI">OpenAI (ChatGPT API)</option>
-                <option value="WORDPRESS_CMS">WordPress CMS API</option>
-                <option value="WORDSTAT">Яндекс Метрика & Wordstat</option>
-                <option value="GEMINI">Google Gemini API</option>
-                <option value="ANTHROPIC">Anthropic Claude API</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>Название подключения</label>
-              <input
-                type="text"
-                placeholder="напр. Продакшн ключ OpenAI"
-                value={connectionName}
-                onChange={(e) => setConnectionName(e.target.value)}
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#1f2937', color: '#fff', boxSizing: 'border-box' }}
-                required
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>Секретный API-ключ / Пароль приложения</label>
-              <input
-                type="password"
-                placeholder="sk-proj-... или wp_app_pass..."
-                value={apiKeyInput}
-                onChange={(e) => setApiKeyInput(e.target.value)}
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#1f2937', color: '#fff', boxSizing: 'border-box' }}
-                required
-              />
-            </div>
+            <form onSubmit={handleSaveConnection}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>Провайдер</label>
+                <select
+                  value={providerSelect}
+                  onChange={(e: any) => setProviderSelect(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#1f2937', color: '#fff' }}
+                >
+                  <option value="OPENAI">OpenAI (ChatGPT API)</option>
+                  <option value="WEBHOOK">Custom Webhook (CMS / External Site)</option>
+                  <option value="GSC">Google Search Console API</option>
+                  <option value="METRIKA">Яндекс Метрика / Wordstat API</option>
+                  <option value="TELEGRAM">Telegram Bot Token</option>
+                  <option value="WORDPRESS_CMS">WordPress CMS API</option>
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>Название интеграции</label>
+                <input
+                  type="text"
+                  placeholder="напр. Рабочий Вебхук CMS"
+                  value={connectionName}
+                  onChange={(e) => setConnectionName(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#1f2937', color: '#fff', boxSizing: 'border-box' }}
+                  required
+                />
+              </div>
+
+              {providerSelect === 'WEBHOOK' ? (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>Target Webhook URL (POST)</label>
+                  <input
+                    type="url"
+                    placeholder="https://mysite.com/api/seo-webhook"
+                    value={webhookUrlInput}
+                    onChange={(e) => setWebhookUrlInput(e.target.value)}
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#1f2937', color: '#fff', boxSizing: 'border-box' }}
+                    required
+                  />
+                </div>
+              ) : (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>Секретный API Ключ (Шифруется AES-256)</label>
+                  <input
+                    type="password"
+                    placeholder="sk-proj-... / bot77123..."
+                    value={apiKeyInput}
+                    onChange={(e) => setApiKeyInput(e.target.value)}
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#1f2937', color: '#fff', boxSizing: 'border-box' }}
+                    required
+                  />
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="button" onClick={() => setShowModal(false)} style={{ flex: 1, padding: '12px', background: '#374151', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+                  Отмена
+                </button>
+                <button type="submit" disabled={loading} style={{ flex: 2, padding: '12px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>
+                  {loading ? 'Шифрование...' : '🔒 Сохранить (AES-256)'}
+                </button>
+              </div>
+            </form>
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ width: '100%', padding: '14px', borderRadius: '8px', border: 'none', background: '#0284c7', color: '#fff', fontWeight: 700, fontSize: '14px', cursor: loading ? 'not-allowed' : 'pointer' }}
-          >
-            {loading ? '⏳ Зашифровка и сохранение...' : '🔒 Сохранить в зашифрованном виде (AES-256)'}
-          </button>
-        </form>
-      </div>
+        </div>
+      )}
 
       {/* Active Integrations Grid */}
       <h2 style={{ fontSize: '18px', color: '#f3f4f6', marginBottom: '14px' }}>Подключенные сервисы ({connectionsList.length})</h2>
