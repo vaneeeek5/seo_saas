@@ -62,17 +62,14 @@ jobs:
             docker compose down --remove-orphans || true
             docker compose up -d --build --force-recreate
             
-            echo "🔍 Waiting 20s for containers to boot..."
-            sleep 20
+            echo "🔍 Waiting 25s for web and api services to boot..."
+            sleep 25
             
             echo "📊 Docker Container Status:"
             docker compose ps
             
-            echo "📋 Docker Logs Output:"
-            docker compose logs --tail=50
-            
-            echo "🧪 Local Server HTTP Test:"
-            curl -i http://localhost || true
-            curl -i http://localhost:3000 || true
+            echo "🧪 Verifying Server Response:"
+            curl -i http://localhost/health-check
+            curl -i http://localhost:3000
             
             echo "🎉 [CI/CD] Automated Deployment Completed Successfully!"
