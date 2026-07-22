@@ -5,7 +5,7 @@ import { useTaskStream } from '../hooks/useTaskStream';
 
 export default function DashboardPage() {
   const { tasks, connected } = useTaskStream('http://localhost:4000');
-  const [activeTab, setActiveTab] = useState<'overview' | 'semantics' | 'content' | 'knowledge' | 'decision' | 'analytics'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'semantics' | 'content' | 'knowledge' | 'decision' | 'analytics' | 'integrations'>('overview');
   const [log, setLog] = useState<string[]>([]);
   const [autoPilotRunning, setAutoPilotRunning] = useState<boolean>(false);
 
@@ -14,6 +14,15 @@ export default function DashboardPage() {
   const [domain, setDomain] = useState('');
   const [createdProjects, setCreatedProjects] = useState<Array<{ id: string; name: string; domain: string; date: string }>>([
     { id: 'proj_demo_1', name: 'SEO SaaS Platform', domain: 'seo-saas.com', date: new Date().toLocaleDateString() }
+  ]);
+
+  // Integrations State
+  const [providerSelect, setProviderSelect] = useState<'GEMINI' | 'OPENAI' | 'ANTHROPIC' | 'WORDSTAT' | 'WORDPRESS_CMS'>('GEMINI');
+  const [connectionName, setConnectionName] = useState('');
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [connectionsList, setConnectionsList] = useState<Array<{ id: string; provider: string; name: string; maskedKey: string; encryption: string; isActive: boolean; date: string }>>([
+    { id: 'conn_demo_gemini', provider: 'GEMINI', name: 'Google Gemini 1.5 Flash API Key', maskedKey: 'AIza-****-****-9xK2', encryption: 'AES-256-GCM', isActive: true, date: new Date().toLocaleDateString() },
+    { id: 'conn_demo_wp', provider: 'WORDPRESS_CMS', name: 'Основной сайт WordPress API', maskedKey: 'wp_a-****-****-00ff', encryption: 'AES-256-GCM', isActive: true, date: new Date().toLocaleDateString() },
   ]);
 
   // Semantics State
@@ -53,13 +62,12 @@ export default function DashboardPage() {
     setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev]);
   };
 
-  // ⚡ AUTOMATED AUTO-PILOT PIPELINE (AI PRIMACY: USER DOES NOT INVENT ANYTHING)
+  // ⚡ AUTOMATED AUTO-PILOT PIPELINE
   const runFullAutoPilot = async () => {
     setAutoPilotRunning(true);
     addLog(`🚀 [Автопилот] Запущен 100% автопилот продвижения...`);
 
     try {
-      // Step 1: Decision Engine determines trending topic automatically
       addLog(`🤖 [AI-Агент] Шаг 1: Анализ ниши сайта и поиск перспективных тем...`);
       const decRes = await fetch('http://localhost:4000/decision/evaluate', {
         method: 'POST',
@@ -77,7 +85,6 @@ export default function DashboardPage() {
       const selectedAutoTopic = autoTopics[Math.floor(Math.random() * autoTopics.length)];
       addLog(`💡 [AI-Агент] Тема выбрана автоматически: "${selectedAutoTopic}"`);
 
-      // Step 2: Collect Semantics Automatically
       addLog(`🔍 [AI-Агент] Шаг 2: Сбор поисковых запросов и частотности...`);
       await fetch('http://localhost:4000/semantics/collect', {
         method: 'POST',
@@ -85,7 +92,6 @@ export default function DashboardPage() {
         body: JSON.stringify({ projectId: 'proj_demo_1', seedKeywords: ['автоматическое seo', 'ai генерация текстов'] })
       });
 
-      // Step 3: Generate Article Automatically
       addLog(`✍️ [AI-Агент] Шаг 3: Написание статьи, структурирование и мета-теги...`);
       const genRes = await fetch('http://localhost:4000/content/articles/generate', {
         method: 'POST',
@@ -105,7 +111,6 @@ export default function DashboardPage() {
       setGeneratedArticles(prev => [newArt, ...prev]);
       setSelectedArticle(newArt);
 
-      // Step 4: Publish Automatically to CMS
       addLog(`🚀 [AI-Агент] Шаг 4: Публикация на сайт в CMS...`);
       const pubRes = await fetch('http://localhost:4000/publishers/publish', {
         method: 'POST',
@@ -120,6 +125,42 @@ export default function DashboardPage() {
       addLog(`[Ошибка Автопилота] ${err.message}`);
     } finally {
       setAutoPilotRunning(false);
+    }
+  };
+
+  // Save Integration Connection
+  const handleSaveConnection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('http://localhost:4000/integrations/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: 'proj_demo_1',
+          provider: providerSelect,
+          name: connectionName || `${providerSelect} Connection`,
+          apiKey: apiKeyInput,
+        })
+      });
+      const data = await res.json();
+      addLog(`[Шифрование AES-256-GCM] Ключ ${providerSelect} успешно зашифрован и сохранен -> Маска: ${data.maskedKey}`);
+
+      setConnectionsList(prev => [
+        {
+          id: data.connectionId,
+          provider: providerSelect,
+          name: connectionName || `${providerSelect} Подключение`,
+          maskedKey: data.maskedKey,
+          encryption: 'AES-256-GCM',
+          isActive: true,
+          date: new Date().toLocaleDateString(),
+        },
+        ...prev
+      ]);
+      setConnectionName('');
+      setApiKeyInput('');
+    } catch (err: any) {
+      addLog(`[Ошибка Сохранения] ${err.message}`);
     }
   };
 
@@ -152,7 +193,7 @@ export default function DashboardPage() {
         body: JSON.stringify({ projectId: 'proj_demo_1', seedKeywords: seeds })
       });
       const data = await res.json();
-      addLog(`[Команда] CollectSemantics -> Задача: ${data.taskId}`);
+      addLog(`[Команда] CollectSemantic -> Задача: ${data.taskId}`);
 
       seeds.forEach((seed, idx) => {
         setKeywordsList(prev => [
@@ -312,6 +353,7 @@ export default function DashboardPage() {
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
         {[
           { id: 'overview', name: '📊 Главная панель' },
+          { id: 'integrations', name: '🔌 Подключения & API Ключи' },
           { id: 'semantics', name: '🔍 Семантика' },
           { id: 'content', name: '✍️ Генерация статей' },
           { id: 'knowledge', name: '📚 База знаний RAG' },
@@ -340,6 +382,89 @@ export default function DashboardPage() {
           </button>
         ))}
       </div>
+
+      {/* ============================================================ */}
+      {/* ВКЛАДКА: ПОДКЛЮЧЕНИЯ & API КЛЮЧИ (INTEGRATIONS) */}
+      {/* ============================================================ */}
+      {activeTab === 'integrations' && (
+        <div style={{ background: '#111827', borderRadius: '12px', padding: '24px', border: '1px solid #1f2937' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div>
+              <h2 style={{ fontSize: '20px', margin: 0, color: '#38bdf8' }}>🔌 Раздел Подключений и Зашифрованных API Ключей</h2>
+              <p style={{ color: '#9ca3af', fontSize: '14px', margin: '4px 0 0' }}>Управление ключами AI-провайдеров и CMS с военным уровнем шифрования AES-256-GCM.</p>
+            </div>
+            <div style={{ background: '#065f46', color: '#a7f3d0', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, border: '1px solid #059669' }}>
+              🔒 Безопасность: AES-256-GCM
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveConnection} style={{ background: '#1f2937', padding: '20px', borderRadius: '10px', marginBottom: '28px', border: '1px solid #374151' }}>
+            <h3 style={{ fontSize: '15px', color: '#fff', marginTop: 0 }}>Добавить новое подключение</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9ca3af', marginBottom: '6px' }}>Сервис / Провайдер</label>
+                <select
+                  value={providerSelect}
+                  onChange={(e: any) => setProviderSelect(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#111827', color: '#fff' }}
+                >
+                  <option value="GEMINI">Google Gemini API</option>
+                  <option value="OPENAI">OpenAI (ChatGPT API)</option>
+                  <option value="ANTHROPIC">Anthropic Claude API</option>
+                  <option value="WORDSTAT">Yandex Wordstat API</option>
+                  <option value="WORDPRESS_CMS">WordPress CMS Application Password</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9ca3af', marginBottom: '6px' }}>Название подключения</label>
+                <input
+                  type="text"
+                  placeholder="напр. Рабочий ключ Gemini"
+                  value={connectionName}
+                  onChange={(e) => setConnectionName(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#111827', color: '#fff', boxSizing: 'border-box' }}
+                  required
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9ca3af', marginBottom: '6px' }}>Секретный API Ключ (Будет зашифрован)</label>
+                <input
+                  type="password"
+                  placeholder="AIza-Sy... или sk-proj-..."
+                  value={apiKeyInput}
+                  onChange={(e) => setApiKeyInput(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#111827', color: '#fff', boxSizing: 'border-box' }}
+                  required
+                />
+              </div>
+            </div>
+            <button type="submit" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: 'none', background: '#0284c7', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
+              🔒 Зашифровать AES-256-GCM и Сохранить Подключение
+            </button>
+          </form>
+
+          <h3 style={{ fontSize: '16px', color: '#f3f4f6', marginBottom: '14px' }}>Активные зашифрованные подключения ({connectionsList.length})</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            {connectionsList.map((conn) => (
+              <div key={conn.id} style={{ background: '#1f2937', padding: '18px', borderRadius: '10px', border: '1px solid #374151' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ fontWeight: 600, color: '#38bdf8', fontSize: '15px' }}>{conn.name}</span>
+                  <span style={{ background: '#064e3b', color: '#6ee7b7', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>
+                    {conn.provider}
+                  </span>
+                </div>
+                <div style={{ fontSize: '13px', color: '#9ca3af', fontFamily: 'monospace', background: '#111827', padding: '8px 12px', borderRadius: '6px', marginBottom: '12px' }}>
+                  Маскированный ключ: <strong style={{ color: '#f3f4f6' }}>{conn.maskedKey}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#6b7280' }}>
+                  <span>🔒 Шифрование: {conn.encryption}</span>
+                  <span style={{ color: '#10b981' }}>● Активно</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ============================================================ */}
       {/* ВКЛАДКА 1: ГЛАВНАЯ ПАНЕЛЬ (OVERVIEW) */}

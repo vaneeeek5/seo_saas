@@ -31,13 +31,24 @@ enum ContentStatus {
   PUBLISHED
 }
 
+enum IntegrationProvider {
+  OPENAI
+  GEMINI
+  ANTHROPIC
+  WORDSTAT
+  AHREFS
+  WORDPRESS_CMS
+  CUSTOM_WEBHOOK
+}
+
 model Organization {
-  id        String    @id @default(uuid())
-  name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  projects  Project[]
-  users     User[]
+  id           String                  @id @default(uuid())
+  name         String
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  projects     Project[]
+  users        User[]
+  integrations IntegrationConnection[]
 
   @@map("organizations")
 }
@@ -55,25 +66,45 @@ model User {
 }
 
 model Project {
-  id             String        @id @default(uuid())
+  id             String                  @id @default(uuid())
   organizationId String
-  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   name           String
   domain         String
-  targetRegion   String?       @default("global")
-  language       String?       @default("en")
-  status         ProjectStatus @default(ACTIVE)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  websites      Website[]
-  tasks         Task[]
-  keywords      Keyword[]
-  clusters      Cluster[]
-  contentAssets ContentAsset[]
-  publications  Publication[]
+  targetRegion   String?                 @default("global")
+  language       String?                 @default("en")
+  status         ProjectStatus           @default(ACTIVE)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  websites       Website[]
+  tasks          Task[]
+  keywords       Keyword[]
+  clusters       Cluster[]
+  contentAssets  ContentAsset[]
+  publications   Publication[]
+  integrations   IntegrationConnection[]
 
   @@map("projects")
+}
+
+model IntegrationConnection {
+  id             String              @id @default(uuid())
+  projectId      String
+  project        Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider       IntegrationProvider
+  name           String
+  encryptedKey   String              @db.Text
+  iv             String
+  authTag        String
+  maskedKey      String
+  config         Json?
+  isActive       Boolean             @default(true)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@map("integration_connections")
 }
 
 model Website {

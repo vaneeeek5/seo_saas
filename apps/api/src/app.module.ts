@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PrismaModule } from './infrastructure/database/prisma.module';
 import { QueueModule } from './infrastructure/queue/queue.module';
+import { SecurityModule } from './infrastructure/security/security.module';
 import { AiProviderModule } from './infrastructure/ai/ai-provider.module';
 import { OrganizationModule } from './modules/organization/organization.module';
 import { ProjectModule } from './modules/project/project.module';
@@ -13,6 +14,7 @@ import { DecisionModule } from './modules/decision/decision.module';
 import { PublisherModule } from './modules/publisher/publisher.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { HealthModule } from './modules/health/health.module';
+import { IntegrationModule } from './modules/integration/integration.module';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { HealthModule } from './modules/health/health.module';
     }),
     PrismaModule,
     QueueModule,
+    SecurityModule,
     AiProviderModule,
     OrganizationModule,
     ProjectModule,
@@ -33,6 +36,7 @@ import { HealthModule } from './modules/health/health.module';
     PublisherModule,
     AnalyticsModule,
     HealthModule,
+    IntegrationModule,
   ],
 })
 export class AppModule {}
