@@ -27,14 +27,14 @@ jobs:
         run: |
           npm run build --workspaces
 
-      - name: Deploy to Server via SSH
+      - name: Deploy via SSH (Key / Password)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: '80.78.241.208'
           username: 'root'
           port: 22
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          password: ${{ secrets.SSH_PASSWORD }}
+          key: ${{ secrets.SSH_PRIVATE_KEY || secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASSWORD || secrets.ROOT_PASSWORD || secrets.SERVER_PASSWORD || secrets.PASSWORD || secrets.VPS_PASSWORD }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           command_timeout: 30m
           script: |
