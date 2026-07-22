@@ -30,12 +30,15 @@ jobs:
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SERVER_HOST || '80.78.241.208' }}
-          username: ${{ secrets.SERVER_USER || 'root' }}
+          host: '80.78.241.208'
+          username: 'root'
+          port: 22
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          command_timeout: 30m
           script: |
-            echo "🚀 [CI/CD] Starting automated deployment..."
+            echo "🚀 [CI/CD] Connected to server 80.78.241.208 successfully!"
             
             TARGET_DIR="/var/www/seo_saas"
             mkdir -p $TARGET_DIR
