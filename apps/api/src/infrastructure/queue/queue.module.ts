@@ -13,9 +13,27 @@ import { BullModule } from '@nestjs/bullmq';
       },
     }),
     BullModule.registerQueue(
-      { name: 'semantic-queue' },
-      { name: 'content-queue' },
-      { name: 'publication-queue' },
+      {
+        name: 'semantic-queue',
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+        },
+      },
+      {
+        name: 'content-queue',
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+        },
+      },
+      {
+        name: 'publication-queue',
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+        },
+      },
     ),
   ],
   exports: [BullModule],

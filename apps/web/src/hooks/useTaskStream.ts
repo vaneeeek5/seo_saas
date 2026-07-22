@@ -15,31 +15,43 @@ export function useTaskStream(apiHost: string = 'http://localhost:4000') {
   const [connected, setConnected] = useState<boolean>(false);
 
   useEffect(() => {
-    const eventSource = new EventSource(`${apiHost}/tasks/stream`);
+    let eventSource: EventSource | null = null;
+    let retryTimeout: NodeJS.Timeout | null = null;
 
-    eventSource.onopen = () => {
-      setConnected(true);
+    const connect = () => {
+      eventSource = new EventSource(`${apiHost}/tasks/stream`);
+
+      eventSource.onopen = () => {
+        setConnected(true);
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const payload: TaskEventPayload = JSON.parse(event.data);
+          setTasks((prev) => ({
+            ...prev,
+            [payload.taskId]: payload,
+          }));
+        } catch (err) {
+          console.error('[SSE Client] Failed to parse task event:', err);
+        }
+      };
+
+      eventSource.onerror = (err) => {
+        console.warn('[SSE Client Warning] Connection lost, attempting auto-reconnect in 3s...');
+        setConnected(false);
+        if (eventSource) {
+          eventSource.close();
+        }
+        retryTimeout = setTimeout(connect, 3000);
+      };
     };
 
-    eventSource.onmessage = (event) => {
-      try {
-        const payload: TaskEventPayload = JSON.parse(event.data);
-        setTasks((prev) => ({
-          ...prev,
-          [payload.taskId]: payload,
-        }));
-      } catch (err) {
-        console.error('Failed to parse SSE task event:', err);
-      }
-    };
-
-    eventSource.onerror = (err) => {
-      console.error('SSE connection error:', err);
-      setConnected(false);
-    };
+    connect();
 
     return () => {
-      eventSource.close();
+      if (retryTimeout) clearTimeout(retryTimeout);
+      if (eventSource) eventSource.close();
     };
   }, [apiHost]);
 
