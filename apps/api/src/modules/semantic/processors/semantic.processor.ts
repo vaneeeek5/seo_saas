@@ -3,12 +3,24 @@ import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DomainEventTypes, TaskStatusChangedEvent, TaskStatus, TaskType } from '@seo-saas/shared';
+import { YandexWordstatProvider } from '../providers/yandex-wordstat.provider';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { ContentStatus } from '@prisma/client';
 
-@Processor('semantic-queue')
+@Processor('semantic-queue', {
+  limiter: {
+    max: 5,
+    duration: 1000,
+  },
+})
 export class SemanticProcessor extends WorkerHost {
   private readonly logger = new Logger(SemanticProcessor.name);
 
-  constructor(private readonly eventEmitter: EventEmitter2) {
+  constructor(
+    private readonly eventEmitter: EventEmitter2,
+    private readonly wordstatProvider: YandexWordstatProvider,
+    private readonly prisma: PrismaService,
+  ) {
     super();
   }
 
@@ -16,20 +28,80 @@ export class SemanticProcessor extends WorkerHost {
     const { taskId, projectId, seedKeywords } = job.data;
     this.logger.log(`[SemanticWorker] Processing job ${job.id} for task ${taskId}...`);
 
-    // Step 1: Processing Status Event
-    this.emitTaskStatus(taskId, projectId, TaskStatus.PROCESSING, 30, 'Parsing keywords...');
+    try {
+      const primarySeed = (Array.isArray(seedKeywords) && seedKeywords.length > 0)
+        ? seedKeywords[0]
+        : 'seo automation';
 
-    // Simulate AI parsing / cluster logic delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Step 1: Query Yandex Wordstat API for similar keywords (LSI)
+      this.emitTaskStatus(taskId, projectId, TaskStatus.PROCESSING, 30, `Fetching Yandex Wordstat LSI phrases for "${primarySeed}"...`);
+      const extractedPhrases = await this.wordstatProvider.getSimilarKeywords(primarySeed, projectId);
 
-    this.emitTaskStatus(taskId, projectId, TaskStatus.PROCESSING, 80, 'Clustering keywords into topics...');
+      // Step 2: Fetch monthly search volumes
+      this.emitTaskStatus(taskId, projectId, TaskStatus.PROCESSING, 60, `Evaluating search volume (GetDynamics) for ${extractedPhrases.length} keywords...`);
+      const volumeMap = await this.wordstatProvider.getSearchVolume(extractedPhrases, projectId);
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
+      // Step 3: Create or update Cluster in DB with DRAFT status for moderation
+      this.emitTaskStatus(taskId, projectId, TaskStatus.PROCESSING, 85, `Persisting cluster & keywords to database...`);
+      
+      const clusterName = `Cluster: ${primarySeed}`;
+      let cluster = await this.prisma.cluster.findFirst({
+        where: { projectId, name: clusterName },
+      });
 
-    // Step 2: Completion Event
-    this.emitTaskStatus(taskId, projectId, TaskStatus.COMPLETED, 100, `Successfully collected & clustered keywords: ${seedKeywords?.join(', ')}`);
+      if (!cluster) {
+        cluster = await this.prisma.cluster.create({
+          data: {
+            projectId,
+            name: clusterName,
+            status: ContentStatus.DRAFT,
+          },
+        });
+      }
 
-    return { keywordsFound: 150, clustersCreated: 12 };
+      // Persist individual Keyword records mapped to cluster
+      let savedCount = 0;
+      for (const phrase of extractedPhrases) {
+        const searchVol = volumeMap[phrase] || 0;
+        
+        await this.prisma.keyword.create({
+          data: {
+            projectId,
+            term: phrase,
+            searchVol,
+            difficulty: Math.min(100, Math.floor(searchVol / 150)),
+            clusterId: cluster.id,
+          },
+        });
+        savedCount++;
+      }
+
+      // Step 4: Completion Event
+      this.emitTaskStatus(
+        taskId,
+        projectId,
+        TaskStatus.COMPLETED,
+        100,
+        `Yandex Wordstat parsed successfully! Created cluster "${clusterName}" with ${savedCount} keywords.`
+      );
+
+      return {
+        clusterId: cluster.id,
+        clusterName: cluster.name,
+        keywordsSaved: savedCount,
+        phrases: extractedPhrases,
+      };
+    } catch (error: any) {
+      this.logger.error(`[SemanticWorker Error] Task ${taskId} failed: ${error.message}`);
+      this.emitTaskStatus(
+        taskId,
+        projectId,
+        TaskStatus.FAILED,
+        0,
+        `Semantic Collection Failed: ${error.message}`
+      );
+      throw error;
+    }
   }
 
   private emitTaskStatus(taskId: string, projectId: string, status: TaskStatus, progress: number, message: string) {

@@ -50,6 +50,7 @@ enum IntegrationProvider {
   AHREFS
   WORDPRESS_CMS
   CUSTOM_WEBHOOK
+  YANDEX_WORDSTAT
 }
 
 model Organization {
@@ -174,12 +175,13 @@ model Keyword {
 }
 
 model Cluster {
-  id        String    @id @default(uuid())
+  id        String        @id @default(uuid())
   projectId String
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name      String
+  status    ContentStatus @default(DRAFT)
   keywords  Keyword[]
-  createdAt DateTime  @default(now())
+  createdAt DateTime      @default(now())
 
   @@map("clusters")
 }
