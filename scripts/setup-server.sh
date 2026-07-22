@@ -1,15 +1,19 @@
 #!/bin/bash
-set -e
+export DEBIAN_FRONTEND=noninteractive
 
 echo "=================================================="
-echo "🛠 Checking & Installing Prerequisites on Server..."
+echo "🛠 Preparing Server Environment & Installing Docker..."
 echo "=================================================="
 
-# 1. Update system packages
-apt-get update -y && apt-get upgrade -y
-apt-get install -y curl git ufw ca-certificates gnupg lsb-release
+# 1. Disable UFW Firewall & reset iptables blocking rules
+echo "🔓 Disabling UFW firewall and clearing iptables blocking..."
+ufw disable || true
+iptables -F || true
 
-# 2. Check & Install Docker
+# 2. Update package lists
+apt-get update -y -qq
+
+# 3. Check & Install Docker
 if ! command -v docker &> /dev/null; then
     echo "🐳 Installing Docker Engine..."
     curl -fsSL https://get.docker.com | sh
@@ -20,19 +24,15 @@ else
     echo "✅ Docker is already installed."
 fi
 
-# 3. Check & Install Docker Compose
+# 4. Check & Install Docker Compose
 if ! docker compose version &> /dev/null; then
     echo "🐳 Installing Docker Compose plugin..."
-    apt-get install -y docker-compose-plugin
+    apt-get install -y -qq docker-compose-plugin
     echo "✅ Docker Compose plugin installed!"
 else
     echo "✅ Docker Compose is ready."
 fi
 
-# 4. Disable UFW blocking for Docker ports
-echo "🔓 Disabling UFW firewall restrictions for Docker..."
-ufw disable || true
-
 echo "=================================================="
-echo "🎉 Server Setup Completed! Server is 100% ready."
+echo "🎉 Server Environment Ready!"
 echo "=================================================="

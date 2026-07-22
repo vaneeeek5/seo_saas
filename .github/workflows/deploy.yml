@@ -38,17 +38,12 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           command_timeout: 30m
           script: |
+            export DEBIAN_FRONTEND=noninteractive
             echo "🚀 [CI/CD] Connected to server 80.78.241.208 successfully!"
             
             TARGET_DIR="/var/www/seo_saas"
             mkdir -p $TARGET_DIR
             cd $TARGET_DIR
-            
-            # Ensure Docker & Docker Compose are installed
-            if ! command -v docker &> /dev/null; then
-              echo "🐳 Installing Docker Engine..."
-              curl -fsSL https://get.docker.com | sh
-            fi
             
             # Sync repository
             if [ -d ".git" ]; then
@@ -60,21 +55,24 @@ jobs:
               git clone https://github.com/vaneeeek5/seo_saas.git .
             fi
             
-            chmod +x scripts/setup-server.sh || true
-            ./scripts/setup-server.sh || true
+            chmod +x scripts/setup-server.sh
+            ./scripts/setup-server.sh
             
             echo "🐳 Launching Docker Compose stack..."
-            docker compose down || true
-            docker compose up -d --build
+            docker compose down --remove-orphans || true
+            docker compose up -d --build --force-recreate
             
-            echo "🔍 Waiting 15s for containers to stabilize..."
-            sleep 15
+            echo "🔍 Waiting 20s for containers to boot..."
+            sleep 20
             
             echo "📊 Docker Container Status:"
             docker compose ps
             
-            echo "🧪 Verifying local HTTP response..."
-            curl -I http://localhost:80 || true
-            curl -I http://localhost:3000 || true
+            echo "📋 Docker Logs Output:"
+            docker compose logs --tail=50
+            
+            echo "🧪 Local Server HTTP Test:"
+            curl -i http://localhost || true
+            curl -i http://localhost:3000 || true
             
             echo "🎉 [CI/CD] Automated Deployment Completed Successfully!"
