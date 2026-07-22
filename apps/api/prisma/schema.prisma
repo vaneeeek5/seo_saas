@@ -25,10 +25,17 @@ enum TaskStatus {
 
 enum ContentStatus {
   DRAFT
-  GENERATING
-  REVIEW_NEEDED
-  SCHEDULED
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
   PUBLISHED
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
 }
 
 enum IntegrationProvider {
@@ -57,6 +64,7 @@ model User {
   id             String       @id @default(uuid())
   email          String       @unique
   name           String?
+  role           UserRole     @default(EDITOR)
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt      DateTime     @default(now())
@@ -66,23 +74,27 @@ model User {
 }
 
 model Project {
-  id             String                  @id @default(uuid())
-  organizationId String
-  organization   Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  name           String
-  domain         String
-  targetRegion   String?                 @default("global")
-  language       String?                 @default("en")
-  status         ProjectStatus           @default(ACTIVE)
-  createdAt      DateTime                @default(now())
-  updatedAt      DateTime                @updatedAt
-  websites       Website[]
-  tasks          Task[]
-  keywords       Keyword[]
-  clusters       Cluster[]
-  contentAssets  ContentAsset[]
-  publications   Publication[]
-  integrations   IntegrationConnection[]
+  id              String                  @id @default(uuid())
+  organizationId  String
+  organization    Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name            String
+  domain          String
+  targetRegion    String?                 @default("global")
+  language        String?                 @default("en")
+  status          ProjectStatus           @default(ACTIVE)
+  articlesPerDay  Int?                    @default(1)
+  articlesPerWeek Int?                    @default(7)
+  includeKeywords String[]
+  excludeKeywords String[]
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  websites        Website[]
+  tasks           Task[]
+  keywords        Keyword[]
+  clusters        Cluster[]
+  contentAssets   ContentAsset[]
+  publications    Publication[]
+  integrations    IntegrationConnection[]
 
   @@map("projects")
 }
@@ -95,6 +107,8 @@ model IntegrationConnection {
   organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   provider       IntegrationProvider
   name           String
+  /// SECURITY MANDATE: This field MUST be encrypted via AES-256 (AES-256-GCM) at the service layer
+  /// (EncryptionService) prior to persistence. Storing plain text API keys is strictly prohibited.
   encryptedKey   String              @db.Text
   iv             String
   authTag        String
@@ -108,13 +122,17 @@ model IntegrationConnection {
 }
 
 model Website {
-  id        String   @id @default(uuid())
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  url       String
-  cmsType   String?  @default("wordpress")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(uuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url             String
+  cmsType         String?  @default("wordpress")
+  articlesPerDay  Int?     @default(1)
+  articlesPerWeek Int?     @default(7)
+  includeKeywords String[]
+  excludeKeywords String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@map("websites")
 }
@@ -161,21 +179,35 @@ model Cluster {
 }
 
 model ContentAsset {
-  id          String        @id @default(uuid())
+  id          String            @id @default(uuid())
   projectId   String
-  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   title       String
   slug        String
-  body        String?       @db.Text
-  status      ContentStatus @default(DRAFT)
-  wordCount   Int?          @default(0)
+  body        String?           @db.Text
+  status      ContentStatus     @default(DRAFT)
+  wordCount   Int?              @default(0)
   metaTitle   String?
   metaDesc    String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
   publication Publication?
+  analytics   ArticleAnalytics?
 
   @@map("content_assets")
+}
+
+model ArticleAnalytics {
+  id             String       @id @default(uuid())
+  contentAssetId String       @unique
+  contentAsset   ContentAsset @relation(fields: [contentAssetId], references: [id], onDelete: Cascade)
+  impressions    Int          @default(0)
+  clicks         Int          @default(0)
+  position       Float        @default(0.0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("article_analytics")
 }
 
 model Publication {
