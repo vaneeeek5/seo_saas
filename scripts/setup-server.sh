@@ -29,14 +29,9 @@ else
     echo "✅ Docker Compose is ready."
 fi
 
-# 4. Configure Firewall (UFW)
-echo "🔒 Configuring UFW Firewall (allowing SSH 22, HTTP 80, HTTPS 443, Web 3000, API 4000)..."
-ufw allow 22/tcp || true
-ufw allow 80/tcp || true
-ufw allow 443/tcp || true
-ufw allow 3000/tcp || true
-ufw allow 4000/tcp || true
-ufw --force enable || true
+# 4. Disable UFW blocking for Docker ports
+echo "🔓 Disabling UFW firewall restrictions for Docker..."
+ufw disable || true
 
 echo "=================================================="
 echo "🎉 Server Setup Completed! Server is 100% ready."

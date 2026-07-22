@@ -73,4 +73,8 @@ jobs:
             echo "📊 Docker Container Status:"
             docker compose ps
             
+            echo "🧪 Verifying local HTTP response..."
+            curl -I http://localhost:80 || true
+            curl -I http://localhost:3000 || true
+            
             echo "🎉 [CI/CD] Automated Deployment Completed Successfully!"
