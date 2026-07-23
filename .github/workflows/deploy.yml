@@ -23,8 +23,9 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Verify Types & Build Monorepo
+      - name: Generate Prisma Client & Build Monorepo
         run: |
+          npx prisma generate --schema=apps/api/prisma/schema.prisma
           npm run build --workspaces
 
       - name: Deploy via SSH (Key / Password)
