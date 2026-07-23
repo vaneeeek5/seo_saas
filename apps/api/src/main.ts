@@ -31,8 +31,8 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT || 4000;
-  await app.listen(port);
-  logger.log(`SEO Content Factory API running on port ${port}`);
-  logger.log(`OpenAPI Swagger documentation available at http://localhost:${port}/api/docs`);
+  await app.listen(port, '0.0.0.0');
+  logger.log(`SEO Content Factory API running on 0.0.0.0:${port}`);
+  logger.log(`OpenAPI Swagger documentation available at http://0.0.0.0:${port}/api/docs`);
 }
 bootstrap();
