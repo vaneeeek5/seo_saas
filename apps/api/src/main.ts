@@ -20,6 +20,8 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });
 
+  app.setGlobalPrefix('api');
+
   // Configure OpenAPI Swagger Documentation
   const config = new DocumentBuilder()
     .setTitle('SEO Content Factory OS API')
