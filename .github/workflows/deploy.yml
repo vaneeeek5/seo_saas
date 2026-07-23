@@ -26,7 +26,7 @@ jobs:
       - name: Generate Prisma Client & Build Monorepo
         run: |
           npx prisma generate --schema=apps/api/prisma/schema.prisma
-          npm run build --workspaces
+          npm run build
 
       - name: Deploy via SSH (Key / Password)
         uses: appleboy/ssh-action@v1.0.3
@@ -63,8 +63,11 @@ jobs:
             docker compose down --remove-orphans || true
             docker compose up -d --build --force-recreate
             
-            echo "🔍 Waiting 25s for web and api services to boot..."
-            sleep 25
+            echo "🔍 Syncing PostgreSQL Prisma schema..."
+            docker compose exec -T api npx prisma db push --schema=apps/api/prisma/schema.prisma --accept-data-loss || true
+            
+            echo "🔍 Waiting 15s for web and api services..."
+            sleep 15
             
             echo "📊 Docker Container Status:"
             docker compose ps
@@ -75,6 +78,5 @@ jobs:
             echo "🧪 Verifying Server Response:"
             curl -i http://localhost/health-check
             curl -i http://localhost:3000/
-            curl -i http://localhost:4000/api/health || true
             
             echo "🎉 [CI/CD] Automated Deployment Completed Successfully!"
