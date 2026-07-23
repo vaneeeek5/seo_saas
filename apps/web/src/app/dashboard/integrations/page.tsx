@@ -1,21 +1,80 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getApiBaseUrl } from '../../../lib/api';
 
 export default function IntegrationsDashboardPage() {
-  const [providerSelect, setProviderSelect] = useState<'OPENAI' | 'WEBHOOK' | 'GSC' | 'METRIKA' | 'TELEGRAM' | 'WORDPRESS_CMS' | 'GEMINI' | 'ANTHROPIC'>('OPENAI');
+  const [providerSelect, setProviderSelect] = useState<
+    | 'YANDEX_WORDSTAT'
+    | 'OPENAI'
+    | 'WEBHOOK'
+    | 'GSC'
+    | 'METRIKA'
+    | 'TELEGRAM'
+    | 'WORDPRESS_CMS'
+    | 'GEMINI'
+    | 'ANTHROPIC'
+  >('YANDEX_WORDSTAT');
+
   const [connectionName, setConnectionName] = useState('');
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [webhookUrlInput, setWebhookUrlInput] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [log, setLog] = useState<string[]>([]);
-  
-  const [connectionsList, setConnectionsList] = useState<Array<{ id: string; provider: string; name: string; maskedKey: string; encryption: string; status: string; isActive: boolean; date: string }>>([
-    { id: 'conn_demo_openai', provider: 'OPENAI', name: 'OpenAI ChatGPT API Key', maskedKey: 'sk-p-****-****-a9F1', encryption: 'AES-256-GCM', status: 'CONNECTED', isActive: true, date: new Date().toLocaleDateString() },
-    { id: 'conn_demo_webhook', provider: 'WEBHOOK', name: 'Внешний Вебхук Публикации (Custom CMS)', maskedKey: 'https://mysite.com/api/webhook-****', encryption: 'AES-256-GCM', status: 'CONNECTED', isActive: true, date: new Date().toLocaleDateString() },
-    { id: 'conn_demo_tg', provider: 'TELEGRAM', name: 'Telegram Bot Уведомления', maskedKey: 'bot77123-****-****-a19F', encryption: 'AES-256-GCM', status: 'CONNECTED', isActive: true, date: new Date().toLocaleDateString() },
-    { id: 'conn_demo_gsc', provider: 'GSC', name: 'Google Search Console API', maskedKey: 'gsc-app-****-****-88ff', encryption: 'AES-256-GCM', status: 'CONNECTED', isActive: true, date: new Date().toLocaleDateString() },
+
+  const [connectionsList, setConnectionsList] = useState<
+    Array<{
+      id: string;
+      provider: string;
+      name: string;
+      maskedKey: string;
+      encryption: string;
+      status: string;
+      isActive: boolean;
+      date: string;
+    }>
+  >([
+    {
+      id: 'conn_demo_yandex',
+      provider: 'YANDEX_WORDSTAT',
+      name: 'Yandex Search & Wordstat API Key',
+      maskedKey: 'y0_a-****-****-77c1',
+      encryption: 'AES-256-GCM',
+      status: 'CONNECTED',
+      isActive: true,
+      date: new Date().toLocaleDateString(),
+    },
+    {
+      id: 'conn_demo_openai',
+      provider: 'OPENAI',
+      name: 'OpenAI ChatGPT API Key',
+      maskedKey: 'sk-p-****-****-a9F1',
+      encryption: 'AES-256-GCM',
+      status: 'CONNECTED',
+      isActive: true,
+      date: new Date().toLocaleDateString(),
+    },
+    {
+      id: 'conn_demo_webhook',
+      provider: 'WEBHOOK',
+      name: 'Внешний Вебхук Публикации (Custom CMS)',
+      maskedKey: 'https://mysite.com/api/webhook-****',
+      encryption: 'AES-256-GCM',
+      status: 'CONNECTED',
+      isActive: true,
+      date: new Date().toLocaleDateString(),
+    },
+    {
+      id: 'conn_demo_tg',
+      provider: 'TELEGRAM',
+      name: 'Telegram Bot Уведомления',
+      maskedKey: 'bot77123-****-****-a19F',
+      encryption: 'AES-256-GCM',
+      status: 'CONNECTED',
+      isActive: true,
+      date: new Date().toLocaleDateString(),
+    },
   ]);
 
   const addLog = (msg: string) => {
@@ -28,7 +87,8 @@ export default function IntegrationsDashboardPage() {
 
   const fetchIntegrations = async () => {
     try {
-      const res = await fetch('http://localhost:4000/integrations');
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/integrations`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -45,9 +105,10 @@ export default function IntegrationsDashboardPage() {
     setLoading(true);
 
     const secretValue = providerSelect === 'WEBHOOK' ? webhookUrlInput : apiKeyInput;
+    const baseUrl = getApiBaseUrl();
 
     try {
-      const res = await fetch('http://localhost:4000/integrations', {
+      const res = await fetch(`${baseUrl}/integrations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -55,16 +116,16 @@ export default function IntegrationsDashboardPage() {
           provider: providerSelect,
           name: connectionName || `${providerSelect} Connection`,
           apiKey: secretValue,
-        })
+        }),
       });
       const data = await res.json();
 
-      addLog(`🔒 [AES-256-GCM Encrypted] Интеграция ${providerSelect} сохранена! Маска: ${data.maskedKey || 'sk-****'}`);
+      addLog(`🔒 [AES-256-GCM Encrypted] Интеграция ${providerSelect} успешно сохранена! Маска: ${data.maskedKey || 'sk-****'}`);
 
-      setConnectionsList(prev => [
+      setConnectionsList((prev) => [
         {
           id: data.connectionId || `conn_${Date.now()}`,
-          provider: providerSelect,
+          provider: data.provider || providerSelect,
           name: connectionName || `${providerSelect} Connection`,
           maskedKey: data.maskedKey || 'sk-****',
           encryption: 'AES-256-GCM',
@@ -72,7 +133,7 @@ export default function IntegrationsDashboardPage() {
           isActive: true,
           date: new Date().toLocaleDateString(),
         },
-        ...prev
+        ...prev,
       ]);
       setConnectionName('');
       setApiKeyInput('');
@@ -86,10 +147,11 @@ export default function IntegrationsDashboardPage() {
   };
 
   const serviceCards = [
+    { provider: 'YANDEX_WORDSTAT', title: 'Yandex Search & Wordstat API', desc: 'Официальный сбор семантики, LSI-фраз и частотности из Яндекс Директа', icon: '🔍', color: '#ff0000' },
     { provider: 'OPENAI', title: 'OpenAI API', desc: 'Генерация статей на GPT-4o и Embeddings', icon: '🤖', color: '#10a37f' },
     { provider: 'WEBHOOK', title: 'CMS & Custom Webhooks', desc: 'Авто-публикация постов по HTTP POST на сторонние серверы', icon: '🌐', color: '#0284c7' },
-    { provider: 'GSC', title: 'Google Search Console', desc: 'Отслеживание кликов, показов и индексации в Google', icon: '🔍', color: '#ea4335' },
-    { provider: 'METRIKA', title: 'Яндекс Метрика & Wordstat', desc: 'Анализ показов, поисковых фраз и трафика', icon: '📊', color: '#ffcc00' },
+    { provider: 'GSC', title: 'Google Search Console', desc: 'Отслеживание кликов, показов и индексации в Google', icon: '🔎', color: '#ea4335' },
+    { provider: 'METRIKA', title: 'Яндекс Метрика', desc: 'Анализ посещаемости, поисковых фраз и конверсий', icon: '📊', color: '#ffcc00' },
     { provider: 'TELEGRAM', title: 'Telegram Bot', desc: 'Уведомления о публикациях и отчетах в Telegram канал', icon: '✈️', color: '#229ed9' },
     { provider: 'WORDPRESS_CMS', title: 'WordPress CMS', desc: 'Интеграция с WordPress REST API', icon: '📝', color: '#21759b' },
   ];
@@ -103,7 +165,7 @@ export default function IntegrationsDashboardPage() {
             🔌 Центр Интеграций и Автопилота (Plug & Play)
           </h1>
           <p style={{ margin: '6px 0 0', color: '#9ca3af', fontSize: '14px' }}>
-            Подключайте AI-провайдеры, Webhooks, Telegram и аналитику. Все ключи шифруются симметричным AES-256-GCM.
+            Подключайте Yandex Search API, AI-провайдеры, Webhooks, Telegram и аналитику. Все ключи шифруются симметричным AES-256-GCM.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
@@ -162,12 +224,15 @@ export default function IntegrationsDashboardPage() {
                   onChange={(e: any) => setProviderSelect(e.target.value)}
                   style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#1f2937', color: '#fff' }}
                 >
+                  <option value="YANDEX_WORDSTAT">Яндекс Wordstat & Search API</option>
                   <option value="OPENAI">OpenAI (ChatGPT API)</option>
                   <option value="WEBHOOK">Custom Webhook (CMS / External Site)</option>
                   <option value="GSC">Google Search Console API</option>
-                  <option value="METRIKA">Яндекс Метрика / Wordstat API</option>
+                  <option value="METRIKA">Яндекс Метрика API</option>
                   <option value="TELEGRAM">Telegram Bot Token</option>
                   <option value="WORDPRESS_CMS">WordPress CMS API</option>
+                  <option value="GEMINI">Google Gemini API</option>
+                  <option value="ANTHROPIC">Anthropic Claude API</option>
                 </select>
               </div>
 
@@ -175,7 +240,7 @@ export default function IntegrationsDashboardPage() {
                 <label style={{ display: 'block', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>Название интеграции</label>
                 <input
                   type="text"
-                  placeholder="напр. Рабочий Вебхук CMS"
+                  placeholder="напр. Яндекс Wordstat Продашн Ключ"
                   value={connectionName}
                   onChange={(e) => setConnectionName(e.target.value)}
                   style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#1f2937', color: '#fff', boxSizing: 'border-box' }}
@@ -197,10 +262,10 @@ export default function IntegrationsDashboardPage() {
                 </div>
               ) : (
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>Секретный API Ключ (Шифруется AES-256)</label>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>Секретный API Ключ (Шифруется AES-256-GCM)</label>
                   <input
                     type="password"
-                    placeholder="sk-proj-... / bot77123..."
+                    placeholder="y0_a-... / sk-proj-... / bot77123..."
                     value={apiKeyInput}
                     onChange={(e) => setApiKeyInput(e.target.value)}
                     style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#1f2937', color: '#fff', boxSizing: 'border-box' }}

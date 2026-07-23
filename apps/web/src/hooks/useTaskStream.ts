@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getApiBaseUrl } from '../lib/api';
 
 export interface TaskEventPayload {
   taskId: string;
@@ -10,7 +11,7 @@ export interface TaskEventPayload {
   error?: string;
 }
 
-export function useTaskStream(apiHost: string = 'http://localhost:4000') {
+export function useTaskStream(customApiHost?: string) {
   const [tasks, setTasks] = useState<Record<string, TaskEventPayload>>({});
   const [connected, setConnected] = useState<boolean>(false);
 
@@ -18,8 +19,13 @@ export function useTaskStream(apiHost: string = 'http://localhost:4000') {
     let eventSource: EventSource | null = null;
     let retryTimeout: NodeJS.Timeout | null = null;
 
+    const baseUrl = customApiHost || getApiBaseUrl();
+    const streamUrl = baseUrl.endsWith('/')
+      ? `${baseUrl}tasks/stream`
+      : `${baseUrl}/tasks/stream`;
+
     const connect = () => {
-      eventSource = new EventSource(`${apiHost}/tasks/stream`);
+      eventSource = new EventSource(streamUrl);
 
       eventSource.onopen = () => {
         setConnected(true);
@@ -53,7 +59,7 @@ export function useTaskStream(apiHost: string = 'http://localhost:4000') {
       if (retryTimeout) clearTimeout(retryTimeout);
       if (eventSource) eventSource.close();
     };
-  }, [apiHost]);
+  }, [customApiHost]);
 
   return { tasks, connected };
 }

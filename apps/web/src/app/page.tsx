@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { useTaskStream } from '../hooks/useTaskStream';
+import { getApiBaseUrl } from '../lib/api';
 
 export default function DashboardPage() {
-  const { tasks, connected } = useTaskStream('http://localhost:4000');
+  const { tasks, connected } = useTaskStream();
   const [activeTab, setActiveTab] = useState<'overview' | 'semantics' | 'content' | 'knowledge' | 'decision' | 'analytics' | 'integrations'>('overview');
   const [log, setLog] = useState<string[]>([]);
   const [autoPilotRunning, setAutoPilotRunning] = useState<boolean>(false);
@@ -22,7 +23,7 @@ export default function DashboardPage() {
   ]);
 
   // Integrations State
-  const [providerSelect, setProviderSelect] = useState<'GEMINI' | 'OPENAI' | 'ANTHROPIC' | 'WORDSTAT' | 'WORDPRESS_CMS'>('GEMINI');
+  const [providerSelect, setProviderSelect] = useState<'YANDEX_WORDSTAT' | 'METRIKA' | 'GEMINI' | 'OPENAI' | 'ANTHROPIC' | 'WORDSTAT' | 'WORDPRESS_CMS'>('YANDEX_WORDSTAT');
   const [connectionName, setConnectionName] = useState('');
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [connectionsList, setConnectionsList] = useState<Array<{ id: string; provider: string; name: string; maskedKey: string; encryption: string; isActive: boolean; date: string }>>([
@@ -73,8 +74,9 @@ export default function DashboardPage() {
     addLog(`🚀 [Автопилот] Запущен 100% автопилот продвижения (Лимит: ${articlesPerDay} статей/день, ${articlesPerWeek} статей/неделю)...`);
 
     try {
+      const baseUrl = getApiBaseUrl();
       addLog(`🤖 [AI-Агент] Шаг 1: Анализ ниши сайта и поиск перспективных тем...`);
-      const decRes = await fetch('http://localhost:4000/decision/evaluate', {
+      const decRes = await fetch(`${baseUrl}/decision/evaluate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: 'proj_demo_1' })
@@ -91,14 +93,14 @@ export default function DashboardPage() {
       addLog(`💡 [AI-Агент] Тема выбрана автоматически: "${selectedAutoTopic}"`);
 
       addLog(`🔍 [AI-Агент] Шаг 2: Сбор поисковых запросов и частотности...`);
-      await fetch('http://localhost:4000/semantics/collect', {
+      await fetch(`${baseUrl}/semantics/collect`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: 'proj_demo_1', seedKeywords: ['автоматическое seo', 'ai генерация текстов'] })
       });
 
       addLog(`✍️ [AI-Агент] Шаг 3: Написание статьи, структурирование и мета-теги...`);
-      const genRes = await fetch('http://localhost:4000/content/articles/generate', {
+      const genRes = await fetch(`${baseUrl}/content/articles/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: 'proj_demo_1', topic: selectedAutoTopic, primaryKeyword: 'автоматическое seo' })
@@ -117,7 +119,7 @@ export default function DashboardPage() {
       setSelectedArticle(newArt);
 
       addLog(`🚀 [AI-Агент] Шаг 4: Публикация на сайт в CMS / Webhook...`);
-      const pubRes = await fetch('http://localhost:4000/publishers/publish', {
+      const pubRes = await fetch(`${baseUrl}/publishers/publish`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: 'proj_demo_1', contentAssetId: newArt.id })
@@ -137,7 +139,8 @@ export default function DashboardPage() {
   const handleSaveConnection = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:4000/integrations/save', {
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/integrations/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -173,7 +176,8 @@ export default function DashboardPage() {
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:4000/projects', {
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/projects`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: projectName, domain, organizationId: 'org_demo_1' })
@@ -191,8 +195,9 @@ export default function DashboardPage() {
   const handleCollectSemantics = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     try {
+      const baseUrl = getApiBaseUrl();
       const seeds = seedKeywordsInput ? seedKeywordsInput.split(',').map(s => s.trim()) : ['seo продвижение', 'ai генератор'];
-      const res = await fetch('http://localhost:4000/semantics/collect', {
+      const res = await fetch(`${baseUrl}/semantics/collect`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: 'proj_demo_1', seedKeywords: seeds })
@@ -218,7 +223,8 @@ export default function DashboardPage() {
     const primaryKw = primaryKwInput || 'seo автоматизация';
 
     try {
-      const res = await fetch('http://localhost:4000/content/articles/generate', {
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/content/articles/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: 'proj_demo_1', topic, primaryKeyword: primaryKw })
@@ -246,7 +252,8 @@ export default function DashboardPage() {
   const handleIngestKnowledge = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:4000/knowledge/ingest', {
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/knowledge/ingest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: 'proj_demo_1', title: knowledgeTitle, content: knowledgeContent })
@@ -263,7 +270,8 @@ export default function DashboardPage() {
 
   const handleEvaluateDecision = async () => {
     try {
-      const res = await fetch('http://localhost:4000/decision/evaluate', {
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/decision/evaluate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: 'proj_demo_1' })
@@ -278,7 +286,8 @@ export default function DashboardPage() {
 
   const handlePublishContent = async (articleId: string) => {
     try {
-      const res = await fetch('http://localhost:4000/publishers/publish', {
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/publishers/publish`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: 'proj_demo_1', contentAssetId: articleId })
@@ -415,10 +424,11 @@ export default function DashboardPage() {
                   onChange={(e: any) => setProviderSelect(e.target.value)}
                   style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#111827', color: '#fff' }}
                 >
-                  <option value="GEMINI">Google Gemini API</option>
+                  <option value="YANDEX_WORDSTAT">Яндекс Wordstat API (Search API)</option>
+                  <option value="METRIKA">Яндекс Метрика API</option>
                   <option value="OPENAI">OpenAI (ChatGPT API)</option>
+                  <option value="GEMINI">Google Gemini API</option>
                   <option value="ANTHROPIC">Anthropic Claude API</option>
-                  <option value="WORDSTAT">Yandex Wordstat API</option>
                   <option value="WORDPRESS_CMS">WordPress CMS Application Password</option>
                 </select>
               </div>
