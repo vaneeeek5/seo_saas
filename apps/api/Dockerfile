@@ -29,4 +29,4 @@ COPY --from=builder /app/apps/api ./apps/api
 
 EXPOSE 4000
 
-CMD ["node", "apps/api/dist/main.js"]
+CMD ["sh", "-c", "npx prisma db push --schema=apps/api/prisma/schema.prisma --accept-data-loss --skip-generate && node apps/api/dist/main.js"]

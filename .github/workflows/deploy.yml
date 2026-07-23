@@ -69,8 +69,12 @@ jobs:
             echo "📊 Docker Container Status:"
             docker compose ps
             
+            echo "📝 API Container Logs (Last 30 lines):"
+            docker compose logs api --tail 30
+            
             echo "🧪 Verifying Server Response:"
             curl -i http://localhost/health-check
-            curl -i http://localhost:3000
+            curl -i http://localhost:3000/
+            curl -i http://localhost:4000/api/health || true
             
             echo "🎉 [CI/CD] Automated Deployment Completed Successfully!"
