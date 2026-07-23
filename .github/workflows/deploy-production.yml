@@ -25,6 +25,7 @@ jobs:
 
       - name: Linting and Build
         run: |
+          npx prisma generate --schema=apps/api/prisma/schema.prisma
           npm run lint --if-present
           npm run build --if-present
 
@@ -42,17 +43,14 @@ jobs:
             
             cd /opt/seo_saas/production
             
-            # --- ШАГ РЕЗЕРВНОГО КОПИРОВАНИЯ ---
             BACKUP_NAME="prod_backup_$(date +%Y%m%d_%H%M%S).tar.gz"
             echo "Creating backup: $BACKUP_NAME"
-            # Бэкапим текущее состояние перед pull (если папка не пустая)
             if [ -d ".git" ]; then
               tar -czf /opt/seo_saas/backups/$BACKUP_NAME . || echo "Backup warning"
               echo "Backup created successfully."
             else
               echo "First deploy, skipping backup."
             fi
-            # -----------------------------------
             
             if [ ! -d ".git" ]; then
               git clone https://github.com/vaneeeek5/seo_saas.git .
@@ -62,6 +60,4 @@ jobs:
             git checkout production
             git reset --hard origin/production
             
-            # Заглушка для будущего деплоя
-            # docker-compose -f docker-compose.prod.yml up -d --build
             echo "Production deployed successfully!"

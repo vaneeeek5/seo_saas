@@ -25,6 +25,7 @@ jobs:
 
       - name: Linting and Build
         run: |
+          npx prisma generate --schema=apps/api/prisma/schema.prisma
           npm run lint --if-present
           npm run build --if-present
 
@@ -34,7 +35,6 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # Позволяет не проверять StrictHostKeyChecking (полезно для первого подключения)
           envs: GITHUB_SHA
           script: |
             echo "Deploying to Staging..."
@@ -49,6 +49,4 @@ jobs:
             git checkout main
             git reset --hard origin/main
             
-            # Заглушка для будущего деплоя
-            # docker-compose -f docker-compose.staging.yml up -d --build
             echo "Staging deployed successfully!"
