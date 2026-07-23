@@ -3,6 +3,14 @@ import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
+process.on('unhandledRejection', (reason: any) => {
+  console.warn('[Process Warning] Unhandled Rejection:', reason?.message || reason);
+});
+
+process.on('uncaughtException', (err: any) => {
+  console.warn('[Process Warning] Uncaught Exception:', err?.message || err);
+});
+
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
